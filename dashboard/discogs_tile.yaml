@@ -1,0 +1,55 @@
+# Album tile — requires custom:button-card (HACS).
+# Tap = play album · double-tap = shuffle · hold = open on Discogs.
+type: custom:button-card
+entity: sensor.discogs_random_record
+show_icon: false
+show_name: true
+show_label: true
+show_state: false
+name: |
+  [[[ return entity.state; ]]]
+label: |
+  [[[
+    const a = entity.attributes;
+    return `${a.label || ''} · ${a.released || ''}\n▶ Tap Play · double-tap Shuffle · hold Discogs`;
+  ]]]
+tap_action:
+  action: call-service
+  service: script.play_discogs_record_on_sonos
+double_tap_action:
+  action: call-service
+  service: script.shuffle_discogs_record
+hold_action:
+  action: url
+  url_path: |
+    [[[ return `https://www.discogs.com/search?q=${encodeURIComponent(entity.attributes.cat_no)}&type=all`; ]]]
+styles:
+  card:
+    - background-image: |
+        [[[ return `linear-gradient(to bottom, rgba(0,0,0,0) 40%, rgba(0,0,0,0.9) 100%), url("${entity.attributes.cover_image}")`; ]]]
+    - background-size: cover
+    - background-position: center
+    - aspect-ratio: 1 / 1
+    - border-radius: 12px
+  grid:
+    - grid-template-areas: '"n" "l"'
+    - grid-template-rows: 1fr min-content
+    - align-items: end
+  name:
+    - justify-self: start
+    - padding: 0 12px 2px 12px
+    - font-size: 16px
+    - font-weight: bold
+    - color: white
+    - text-shadow: 0 1px 3px rgba(0,0,0,0.9)
+  label:
+    - justify-self: start
+    - text-align: left
+    - white-space: pre-line
+    - padding: 0 12px 12px 12px
+    - font-size: 12px
+    - color: white
+    - text-shadow: 0 1px 3px rgba(0,0,0,0.9)
+grid_options:
+  columns: 11
+  rows: auto

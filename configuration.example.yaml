@@ -1,0 +1,6 @@
+# Add these top-level include lines to your configuration.yaml.
+# They point the `sensor:` and `rest:` domains at their folders so each source
+# lives in its own file.
+
+sensor: !include_dir_merge_list sensors/
+rest: !include_dir_merge_list rest/

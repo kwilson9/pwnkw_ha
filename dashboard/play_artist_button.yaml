@@ -1,0 +1,32 @@
+# "Play <Artist> Mix in LR" button — requires custom:button-card (HACS).
+# Dynamic, bold artist name that wraps on long names.
+type: custom:button-card
+entity: sensor.discogs_random_record
+show_state: false
+icon: mdi:account-music
+name: |
+  [[[
+    const s = entity.state || '';
+    const artist = s.includes(' - ') ? s.split(' - ')[0] : s;
+    return `Play <b>${artist}</b> Mix in LR`;
+  ]]]
+tap_action:
+  action: call-service
+  service: script.play_discogs_artist_on_sonos
+styles:
+  grid:
+    - grid-template-areas: '"i n"'
+    - grid-template-columns: min-content 1fr
+    - align-items: center
+  name:
+    - justify-self: start
+    - text-align: left
+    - padding-left: 8px
+    - font-size: 14px
+    - white-space: normal
+    - line-height: 1.2
+  icon:
+    - width: 22px
+grid_options:
+  columns: 6
+  rows: auto

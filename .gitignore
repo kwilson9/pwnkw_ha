@@ -1,0 +1,13 @@
+# Never commit secrets or runtime state
+secrets.yaml
+.storage/
+*.log
+*.db
+*.db-*
+
+# Python / HA runtime cruft
+__pycache__/
+*.pyc
+.HA_VERSION
+tts/
+deps/

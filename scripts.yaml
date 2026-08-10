@@ -1,0 +1,101 @@
+# Discogs → Sonos scripts. Merge these into your existing scripts.yaml (or add via the UI).
+# All three target media_player.livingroom_sonos — change to your speaker.
+
+play_discogs_record_on_sonos:
+  alias: Play Discogs Record on Sonos
+  icon: mdi:record-player
+  mode: single
+  description: >-
+    Resolves the current Discogs random record to an Apple Music album (via the
+    discogs_album_on_apple_music REST sensor) and plays it on the Living Room Sonos.
+    Force-refreshes the sensor first so it matches whatever record is currently shown.
+  sequence:
+    - action: homeassistant.update_entity
+      target:
+        entity_id: sensor.discogs_album_on_apple_music
+      note: Re-run the iTunes lookup for the album currently shown by the Discogs sensor.
+    - delay:
+        seconds: 2
+    - variables:
+        url: "{{ (state_attr('sensor.discogs_album_on_apple_music','collectionViewUrl') or '').split('?')[0] }}"
+        album: "{{ states('sensor.discogs_random_record') }}"
+    - if:
+        - condition: template
+          value_template: "{{ url | length > 0 }}"
+      then:
+        - action: media_player.play_media
+          target:
+            entity_id: media_player.livingroom_sonos
+          data:
+            media_content_type: music
+            media_content_id: "{{ url }}"
+      else:
+        - action: persistent_notification.create
+          data:
+            title: "Discogs → Sonos"
+            message: "Couldn't find '{{ album }}' on Apple Music to play."
+
+play_discogs_artist_on_sonos:
+  alias: Play Discogs Artist on Sonos
+  icon: mdi:account-music
+  mode: single
+  description: >-
+    Plays a shuffled mix of the current Discogs artist's top Apple Music songs on the
+    Living Room Sonos. Uses the discogs_artist_songs_apple_music REST sensor (iTunes
+    Search API), force-refreshed for the current artist.
+  sequence:
+    - action: homeassistant.update_entity
+      target:
+        entity_id: sensor.discogs_artist_songs_apple_music
+      note: Re-run the iTunes song search for the artist currently shown.
+    - delay:
+        seconds: 2
+    - variables:
+        artist: "{{ states('sensor.discogs_random_record').split(' - ')[0] }}"
+        urls: >-
+          {{ (state_attr('sensor.discogs_artist_songs_apple_music','results') or [])
+             | selectattr('trackViewUrl','defined')
+             | map(attribute='trackViewUrl')
+             | map('replace','&uo=4','')
+             | list }}
+    - if:
+        - condition: template
+          value_template: "{{ urls | count > 0 }}"
+      then:
+        - action: media_player.play_media
+          target:
+            entity_id: media_player.livingroom_sonos
+          data:
+            media_content_type: music
+            media_content_id: "{{ urls[0] }}"
+            enqueue: replace
+        - repeat:
+            for_each: "{{ urls[1:] }}"
+            sequence:
+              - action: media_player.play_media
+                target:
+                  entity_id: media_player.livingroom_sonos
+                data:
+                  media_content_type: music
+                  media_content_id: "{{ repeat.item }}"
+                  enqueue: add
+        - action: media_player.shuffle_set
+          target:
+            entity_id: media_player.livingroom_sonos
+          data:
+            shuffle: true
+      else:
+        - action: persistent_notification.create
+          data:
+            title: "Discogs → Sonos"
+            message: "Couldn't find songs for '{{ artist }}' on Apple Music."
+
+shuffle_discogs_record:
+  alias: Shuffle Discogs Record
+  icon: mdi:shuffle-variant
+  mode: single
+  description: Re-rolls sensor.discogs_random_record to a new random album from the collection by forcing a refresh.
+  sequence:
+    - action: homeassistant.update_entity
+      target:
+        entity_id: sensor.discogs_random_record

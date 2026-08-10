@@ -1,0 +1,5 @@
+# Discogs integration — provides sensor.discogs_random_record (state: "Artist - Album",
+# with cover_image / cat_no / label / released / format attributes).
+# Token is referenced via secrets.yaml (see secrets.yaml.example).
+- platform: discogs
+  token: !secret discogs_token

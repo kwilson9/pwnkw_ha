@@ -1,0 +1,13 @@
+# Resolves the current Discogs artist's top songs on Apple Music via Apple's free
+# iTunes Search API (no auth). The "Play Discogs Artist on Sonos" script force-refreshes
+# this sensor, reads the `results` attribute, and enqueues each track's URL on the
+# Living Room Sonos as a shuffled mix. State = number of tracks found.
+- resource_template: >-
+    https://itunes.apple.com/search?term={{ states('sensor.discogs_random_record').split(' - ')[0] | urlencode }}&entity=song&limit=10
+  scan_interval: 3600
+  sensor:
+    - name: Discogs Artist Songs Apple Music
+      value_template: "{{ value_json.resultCount | int(0) }}"
+      unit_of_measurement: tracks
+      json_attributes:
+        - results

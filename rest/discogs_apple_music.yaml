@@ -1,0 +1,18 @@
+# Resolves the current Discogs "random record" to an Apple Music album using Apple's
+# free public iTunes Search API (no auth). The "Play Discogs Record on Sonos" script
+# force-refreshes this sensor, then plays collectionViewUrl on Sonos via Apple Music
+# share-link support. resource_template re-runs the search for whatever album the
+# Discogs sensor is currently showing.
+- resource_template: >-
+    https://itunes.apple.com/search?term={{ states('sensor.discogs_random_record') | urlencode }}&entity=album&limit=1
+  scan_interval: 3600
+  sensor:
+    - name: Discogs Album On Apple Music
+      value_template: >-
+        {{ value_json.results[0].collectionName if (value_json.resultCount | int(0)) > 0 else 'not found' }}
+      json_attributes_path: "$.results[0]"
+      json_attributes:
+        - artistName
+        - collectionName
+        - collectionViewUrl
+        - artworkUrl100
