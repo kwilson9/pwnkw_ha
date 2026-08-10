@@ -80,6 +80,26 @@ secrets.yaml.example              # the secret you need to set
 No credentials are committed. `secrets.yaml` and `.storage/` are git-ignored, and the Discogs
 token is referenced via `!secret discogs_token` rather than inlined.
 
+## Credits & Attribution
+
+This project is glue — it stands on these:
+
+- **Discogs** — album metadata and cover art come from the [Discogs](https://www.discogs.com)
+  database via the [Discogs API](https://www.discogs.com/developers). *Data provided by Discogs.*
+- **Home Assistant Discogs integration** — provides `sensor.discogs_random_record`
+  ([docs](https://www.home-assistant.io/integrations/discogs) ·
+  [source](https://github.com/home-assistant/core/tree/dev/homeassistant/components/discogs),
+  code owner [@thibmaek](https://github.com/thibmaek)).
+- **discogs-client** — the official Python Discogs API client the integration depends on:
+  [github.com/discogs/discogs_client](https://github.com/discogs/discogs_client).
+- **Apple iTunes Search API** — resolves album/artist names to Apple Music URLs (free, no auth):
+  [documentation](https://performance-partners.apple.com/search-api).
+- **custom:button-card** — the dashboard tile:
+  [github.com/custom-cards/button-card](https://github.com/custom-cards/button-card).
+
+Trademarks (Discogs, Apple Music, Sonos) belong to their respective owners; this project is not
+affiliated with or endorsed by any of them.
+
 ---
 
 *Built in a single evening with Claude Code. Tap a record, hear it play. 🎶*
