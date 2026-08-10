@@ -1,0 +1,7 @@
+# Add any top-level include lines this project needs to your configuration.yaml.
+# Delete this file if the project needs no configuration.yaml changes.
+#
+# Examples:
+# sensor: !include_dir_merge_list sensors/
+# rest: !include_dir_merge_list rest/
+# template: !include_dir_merge_list templates/

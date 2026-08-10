@@ -32,6 +32,16 @@ Every project in this repo follows the same rules, so they're predictable to ins
    lines from its `configuration.example.yaml`.
 4. Restart / reload as the project's README says, then add its dashboard cards.
 
+## Adding a new project
+
+Start from the scaffold in [`projects/_template/`](projects/_template/):
+
+1. Copy `projects/_template/` to `projects/<your-project>/`.
+2. Delete the `.gitkeep` files and any folders/stubs the project doesn't use.
+3. Fill in the project's `README.md`.
+4. Add a row to the **Projects** table above.
+5. Append any secrets to [`secrets.yaml.example`](secrets.yaml.example) under a new heading.
+
 ## Repo layout
 
 ```
@@ -41,6 +51,7 @@ pwnkw_ha/
 ├── .gitignore             # excludes secrets.yaml, .storage, logs, db
 ├── secrets.yaml.example   # aggregated secret placeholders, grouped by project
 └── projects/
+    ├── _template/         # copy this to start a new project
     └── discogs-jukebox/   # first project
         ├── README.md
         ├── configuration.example.yaml

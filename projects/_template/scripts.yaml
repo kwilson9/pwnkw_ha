@@ -1,0 +1,11 @@
+# Scripts for this project — merge into your Home Assistant scripts.yaml.
+# Delete this file if the project has no scripts.
+#
+# my_script_id:
+#   alias: My Script
+#   icon: mdi:play
+#   mode: single
+#   sequence:
+#     - action: light.turn_on
+#       target:
+#         entity_id: light.example

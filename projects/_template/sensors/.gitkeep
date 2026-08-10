@@ -1,0 +1,2 @@
+# Put platform-style sensor .yaml files here (loaded via `sensor: !include_dir_merge_list sensors/`).
+# Delete this .gitkeep once you add real files, or delete the folder if unused.
