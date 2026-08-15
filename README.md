@@ -9,6 +9,7 @@ just the piece you want.
 | Project | What it does |
 |---|---|
 | [**Discogs → Sonos Jukebox**](projects/discogs-jukebox/) | Shows a random record from your Discogs collection on a dashboard tile — tap to play the album on Sonos (via Apple Music), double-tap to shuffle, hold to open Discogs, plus a "Play Artist Mix" button. |
+| [**Mailbox Item Tracker**](projects/mailbox-tracker/) | Live count of uncollected items in your remote/CMRA mailbox (e.g. Anytime Mailbox), counted in real time from the provider's "new mail" emails via IMAP, and auto-reset to zero when you arrive to collect. |
 
 *More on the way.*
 
@@ -52,10 +53,14 @@ pwnkw_ha/
 ├── secrets.yaml.example   # aggregated secret placeholders, grouped by project
 └── projects/
     ├── _template/         # copy this to start a new project
-    └── discogs-jukebox/   # first project
+    ├── discogs-jukebox/   # first project
+    │   ├── README.md
+    │   ├── configuration.example.yaml
+    │   └── sensors/  rest/  scripts.yaml  dashboard/
+    └── mailbox-tracker/   # IMAP-driven mailbox item counter
         ├── README.md
         ├── configuration.example.yaml
-        ├── sensors/  rest/  scripts.yaml  dashboard/
+        └── packages/  dashboard/
 ```
 
 ## License

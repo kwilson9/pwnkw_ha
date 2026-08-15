@@ -1,0 +1,11 @@
+# Glanceable card. Add via a Manual (YAML) dashboard card.
+type: entities
+title: Mailbox
+show_header_toggle: false
+entities:
+  - entity: input_number.mailbox_items_waiting
+    name: Items waiting
+  - entity: input_datetime.last_mailbox_pickup
+    name: Last collected
+  - entity: input_button.reset_mailbox_count
+    name: Reset to 0

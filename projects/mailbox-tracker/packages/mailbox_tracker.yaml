@@ -1,0 +1,133 @@
+###############################################################################
+# Mailbox Item Tracker — Home Assistant package
+# Part of pwnkw_ha: https://github.com/kwilson9/pwnkw_ha
+#
+# Counts uncollected items in a remote / CMRA mailbox from the provider's
+# "new mail item(s)" notification emails (e.g. Anytime Mailbox), and resets to
+# zero when you physically visit to collect. No cloud webhook, no polling
+# script, no LLM in the loop — the count is a real-time function of email
+# arrivals via the HA IMAP integration's `imap_content` event.
+#
+# BEFORE USE — change these to match your setup:
+#   • person.you   -> your person entity (drives the pickup auto-reset)
+#   • zone.mailbox -> a zone you create at your mailbox's street address
+#   • the IMAP search + body regex assume Anytime Mailbox wording — adjust for
+#     your provider (see the project README).
+#
+# The IMAP integration itself is added in the HA UI (Settings > Devices &
+# Services > Add > IMAP), NOT here. This package only consumes its event.
+###############################################################################
+
+input_number:
+  mailbox_items_waiting:
+    name: Mailbox Items Waiting
+    min: 0
+    max: 50
+    step: 1
+    mode: box
+    unit_of_measurement: items
+    icon: mdi:mailbox
+
+  mailbox_last_uid:
+    name: Mailbox Last UID          # UID high-water mark — dedups IMAP re-fires
+    min: 0
+    max: 4294967295
+    step: 1
+    mode: box
+    icon: mdi:pound
+
+input_datetime:
+  last_mailbox_pickup:
+    name: Last Mailbox Pickup
+    has_date: true
+    has_time: true
+    icon: mdi:mailbox-open-up
+
+input_button:
+  reset_mailbox_count:
+    name: Reset Mailbox Count
+    icon: mdi:mailbox-open
+
+automation:
+  # 1) ARRIVAL — a provider "new mail item(s)" email lands -> add N to the count
+  - id: mailbox_count_new_mail_items_imap
+    alias: "Mailbox — Count New Mail Items (IMAP)"
+    description: >-
+      On each imap_content event, if it's a live arrival (not a startup re-fire)
+      with a UID higher than the last one seen, parse the item count from the
+      body and add it. UID high-water dedup makes it idempotent across restarts.
+    mode: queued
+    max: 10
+    triggers:
+      - trigger: event
+        event_type: imap_content
+    conditions:
+      # Template by necessity: compares the event payload to a helper — there is
+      # no native condition that reads trigger.event.data.
+      - condition: template
+        value_template: >-
+          {{ (trigger.event.data.uid | int(0)) > (states('input_number.mailbox_last_uid') | int(0))
+             and not (trigger.event.data.initial | default(false))
+             and 'New Mail' in (trigger.event.data.subject | default('')) }}
+    actions:
+      - action: input_number.set_value
+        target:
+          entity_id: input_number.mailbox_items_waiting
+        data:
+          value: >-
+            {{ (states('input_number.mailbox_items_waiting') | int(0))
+               + ((trigger.event.data.text | default('')) | regex_findall('(\d+)\s+new mail item') | first | int(1)) }}
+      - action: input_number.set_value
+        target:
+          entity_id: input_number.mailbox_last_uid
+        data:
+          value: "{{ trigger.event.data.uid | int(0) }}"
+
+  # 2) PICKUP — you're at the mailbox for 1+ continuous minute -> clear the count
+  - id: mailbox_reset_count_on_pickup
+    alias: "Mailbox — Reset Count on Pickup"
+    description: >-
+      Zone-enter + 1-min dwell + still-present check = a real visit, not a
+      drive-by. Zeroes the count (assumes you collect everything) and stamps the
+      pickup time.
+    mode: single
+    triggers:
+      - trigger: zone
+        entity_id: person.you        # <-- CHANGE to your person entity
+        zone: zone.mailbox           # <-- a zone at your mailbox's address
+        event: enter
+    actions:
+      - delay: { minutes: 1 }        # dwell filter: drive-bys leave before this
+      - condition: zone
+        entity_id: person.you        # <-- CHANGE
+        zone: zone.mailbox
+      - action: input_number.set_value
+        target:
+          entity_id: input_number.mailbox_items_waiting
+        data:
+          value: 0
+      - action: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.last_mailbox_pickup
+        data:
+          datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+
+  # 3) MANUAL RESET — backstop button (covers a missed event or missed pickup)
+  - id: mailbox_manual_reset_button
+    alias: "Mailbox — Manual Reset (button)"
+    description: Press the button to zero the count and stamp the pickup time.
+    mode: single
+    triggers:
+      - trigger: state
+        entity_id: input_button.reset_mailbox_count
+    actions:
+      - action: input_number.set_value
+        target:
+          entity_id: input_number.mailbox_items_waiting
+        data:
+          value: 0
+      - action: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.last_mailbox_pickup
+        data:
+          datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
