@@ -1,0 +1,10 @@
+# Mailbox Item Tracker loads as a package. Add to your configuration.yaml:
+
+homeassistant:
+  packages: !include_dir_named packages/
+
+# If you already load packages, just drop packages/mailbox_tracker.yaml into
+# that folder — no configuration.yaml change needed.
+#
+# The IMAP integration is added via the HA UI (Settings > Devices & Services >
+# Add > IMAP), not here. See the project README.
