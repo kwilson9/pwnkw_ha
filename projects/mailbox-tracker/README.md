@@ -31,7 +31,7 @@ Provider "new item" email ─► your inbox ─► HA IMAP ─(imap_content even
   - **parses `N`** from the email body (`regex_findall('(\d+)\s+new mail item')`),
   - **adds it** to `input_number.mailbox_items_waiting`,
   - **dedups** with a UID high-water mark (`input_number.mailbox_last_uid`). IMAP UIDs only increase, so "count only if UID > last seen" is idempotent — restarts and re-syncs can't double-count, and the automation never has to write back to your mailbox.
-- **Pickup** — a **zone** at your mailbox's address plus your `person` entity. Enter the zone and stay **≥1 minute** (a **dwell filter**, so a drive-by doesn't count), and the count resets to 0 and stamps `input_datetime.last_mailbox_pickup`. Assumes you clear the whole box on a visit.
+- **Pickup** — a **zone** at your mailbox's address plus the `person` entities of everyone who collects (list them all in the trigger). Enter the zone and stay **≥1 minute** (a **dwell filter**, so a drive-by doesn't count), and the count resets to 0 and stamps `input_datetime.last_mailbox_pickup`. Assumes you clear the whole box on a visit.
 - **Backstop** — an `input_button` to zero it by hand if presence ever misses.
 
 No cloud webhook, no external server, no LLM — just an IMAP event and a zone.
@@ -52,7 +52,7 @@ No cloud webhook, no external server, no LLM — just an IMAP event and a zone.
    - **Include "Body text"** so the event carries the body to parse.
    - *Tip:* don't filter on `UnSeen` if something marks these read quickly (you'd match nothing) — filter by sender/subject as above; the UID dedup handles the rest.
 2. **Package:** copy `packages/mailbox_tracker.yaml` into your HA `packages/` folder and add the include from [`configuration.example.yaml`](configuration.example.yaml).
-3. **Edit two references** in the package: `person.you` → your person entity, and ensure a `zone.mailbox` exists at your mailbox's address (or rename the zone reference).
+3. **Edit two references** in the package: list everyone who collects the mail under the pickup trigger (`person.you`, `person.partner`, …), and ensure a `zone.mailbox` exists at your mailbox's address (or rename the zone reference).
 4. **Restart** Home Assistant.
 5. **Dashboard:** add the card from [`dashboard/mailbox_card.yaml`](dashboard/mailbox_card.yaml).
 6. **Seed** the current real count via the button/helper — you're live.

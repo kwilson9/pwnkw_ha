@@ -4,18 +4,21 @@
 #
 # Counts uncollected items in a remote / CMRA mailbox from the provider's
 # "new mail item(s)" notification emails (e.g. Anytime Mailbox), and resets to
-# zero when you physically visit to collect. No cloud webhook, no polling
-# script, no LLM in the loop — the count is a real-time function of email
-# arrivals via the HA IMAP integration's `imap_content` event.
+# zero when anyone in the household visits to collect. No cloud webhook, no
+# polling script, no LLM — the count is a real-time function of email arrivals
+# via the HA IMAP integration's `imap_content` event.
+#
+# ONE automation, single purpose: named triggers (arrival / pickup / manual)
+# feeding a choose tree.
 #
 # BEFORE USE — change these to match your setup:
-#   • person.you   -> your person entity (drives the pickup auto-reset)
+#   • person.you / person.partner -> the person entities of everyone who
+#     collects the mail (add or remove lines under the pickup trigger)
 #   • zone.mailbox -> a zone you create at your mailbox's street address
-#   • the IMAP search + body regex assume Anytime Mailbox wording — adjust for
-#     your provider (see the project README).
+#   • the IMAP search + body regex assume Anytime Mailbox wording (see README)
 #
-# The IMAP integration itself is added in the HA UI (Settings > Devices &
-# Services > Add > IMAP), NOT here. This package only consumes its event.
+# The IMAP integration is added in the HA UI (Settings > Devices & Services >
+# Add > IMAP), NOT here. This package only consumes its event.
 ###############################################################################
 
 input_number:
@@ -49,85 +52,67 @@ input_button:
     icon: mdi:mailbox-open
 
 automation:
-  # 1) ARRIVAL — a provider "new mail item(s)" email lands -> add N to the count
-  - id: mailbox_count_new_mail_items_imap
-    alias: "Mailbox — Count New Mail Items (IMAP)"
+  - id: mailbox_item_counter
+    alias: "Mailbox — Item Counter"
     description: >-
-      On each imap_content event, if it's a live arrival (not a startup re-fire)
-      with a UID higher than the last one seen, parse the item count from the
-      body and add it. UID high-water dedup makes it idempotent across restarts.
-    mode: queued
+      Single-stack mailbox item tracker. Named triggers -> choose tree.
+      arrival = a provider "New Mail" notice via the IMAP imap_content event ->
+      add N to the count (UID-deduped, startup-skip). pickup = someone at the
+      mailbox (zone.mailbox) for 1+ min -> reset to 0. manual = reset button.
+      pickup/manual also stamp last_mailbox_pickup.
+    mode: queued        # arrival read-add-write must serialize; never cancel
     max: 10
     triggers:
-      - trigger: event
+      - id: arrival
+        trigger: event
         event_type: imap_content
-    conditions:
-      # Template by necessity: compares the event payload to a helper — there is
-      # no native condition that reads trigger.event.data.
-      - condition: template
-        value_template: >-
-          {{ (trigger.event.data.uid | int(0)) > (states('input_number.mailbox_last_uid') | int(0))
-             and not (trigger.event.data.initial | default(false))
-             and 'New Mail' in (trigger.event.data.subject | default('')) }}
-    actions:
-      - action: input_number.set_value
-        target:
-          entity_id: input_number.mailbox_items_waiting
-        data:
-          value: >-
-            {{ (states('input_number.mailbox_items_waiting') | int(0))
-               + ((trigger.event.data.text | default('')) | regex_findall('(\d+)\s+new mail item') | first | int(1)) }}
-      - action: input_number.set_value
-        target:
-          entity_id: input_number.mailbox_last_uid
-        data:
-          value: "{{ trigger.event.data.uid | int(0) }}"
-
-  # 2) PICKUP — you're at the mailbox for 1+ continuous minute -> clear the count
-  - id: mailbox_reset_count_on_pickup
-    alias: "Mailbox — Reset Count on Pickup"
-    description: >-
-      Zone-enter + 1-min dwell + still-present check = a real visit, not a
-      drive-by. Zeroes the count (assumes you collect everything) and stamps the
-      pickup time.
-    mode: single
-    triggers:
-      - trigger: zone
-        entity_id: person.you        # <-- CHANGE to your person entity
-        zone: zone.mailbox           # <-- a zone at your mailbox's address
-        event: enter
-    actions:
-      - delay: { minutes: 1 }        # dwell filter: drive-bys leave before this
-      - condition: zone
-        entity_id: person.you        # <-- CHANGE
-        zone: zone.mailbox
-      - action: input_number.set_value
-        target:
-          entity_id: input_number.mailbox_items_waiting
-        data:
-          value: 0
-      - action: input_datetime.set_datetime
-        target:
-          entity_id: input_datetime.last_mailbox_pickup
-        data:
-          datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
-
-  # 3) MANUAL RESET — backstop button (covers a missed event or missed pickup)
-  - id: mailbox_manual_reset_button
-    alias: "Mailbox — Manual Reset (button)"
-    description: Press the button to zero the count and stamp the pickup time.
-    mode: single
-    triggers:
-      - trigger: state
+      - id: pickup
+        trigger: state
+        entity_id:                       # everyone who collects the mail:
+          - person.you                   # <-- CHANGE
+          - person.partner               # <-- CHANGE, or remove this line
+        to: "Mailbox"                     # person state = zone friendly name
+        for: { minutes: 1 }               # dwell — a drive-by leaves before this
+      - id: manual
+        trigger: state
         entity_id: input_button.reset_mailbox_count
+    conditions: []
     actions:
-      - action: input_number.set_value
-        target:
-          entity_id: input_number.mailbox_items_waiting
-        data:
-          value: 0
-      - action: input_datetime.set_datetime
-        target:
-          entity_id: input_datetime.last_mailbox_pickup
-        data:
-          datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+      - choose:
+          - alias: "Arrival — a New Mail notice landed: add its item count"
+            conditions:
+              - condition: trigger
+                id: [arrival]
+              # Guarded with trigger.platform=='event' — trigger.event.data
+              # raises on the non-event (pickup/manual) triggers in this stack.
+              - condition: template
+                value_template: >-
+                  {{ trigger.platform == 'event'
+                     and (trigger.event.data.uid | int(0)) > (states('input_number.mailbox_last_uid') | int(0))
+                     and not (trigger.event.data.initial | default(false))
+                     and 'New Mail' in (trigger.event.data.subject | default('')) }}
+            sequence:
+              - alias: "Add N items parsed from the email body"
+                action: input_number.set_value
+                target: { entity_id: input_number.mailbox_items_waiting }
+                data:
+                  value: >-
+                    {{ (states('input_number.mailbox_items_waiting') | int(0))
+                       + ((trigger.event.data.text | default('')) | regex_findall('(\d+)\s+new mail item') | first | int(1)) }}
+              - alias: "Advance the UID high-water mark"
+                action: input_number.set_value
+                target: { entity_id: input_number.mailbox_last_uid }
+                data: { value: "{{ trigger.event.data.uid | int(0) }}" }
+          - alias: "Pickup or manual reset — clear the count and stamp the time"
+            conditions:
+              - condition: trigger
+                id: [pickup, manual]
+            sequence:
+              - alias: "Zero the waiting count (whole box collected)"
+                action: input_number.set_value
+                target: { entity_id: input_number.mailbox_items_waiting }
+                data: { value: 0 }
+              - alias: "Stamp the pickup time"
+                action: input_datetime.set_datetime
+                target: { entity_id: input_datetime.last_mailbox_pickup }
+                data: { datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}" }
