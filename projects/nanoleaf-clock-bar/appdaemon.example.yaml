@@ -1,0 +1,36 @@
+---
+# Minimal AppDaemon config for this project.
+# On the Home Assistant OS add-on this lives at
+#   /addon_configs/a0d7b954_appdaemon/appdaemon.yaml
+# which is `/config/appdaemon.yaml` as seen from INSIDE the add-on container.
+
+appdaemon:
+  # --- app_dir: read the README section on this before setting it -----------
+  # Omit this line entirely to use the default, [config dir]/apps, which on the
+  # add-on means /addon_configs/a0d7b954_appdaemon/apps.
+  #
+  # Set it ONLY if you keep your apps in Home Assistant's config directory
+  # instead. Inside the AppDaemon container, HA's config dir is mounted at
+  # /homeassistant -- NOT /config. Writing /config/apps here silently points
+  # back at the add-on's own folder and looks like nothing happened.
+  app_dir: /homeassistant/apps
+
+  # AppDaemon does NOT inherit these from Home Assistant -- they are required,
+  # and the add-on ships with Amsterdam sample values. Set them to your own or
+  # any AppDaemon scheduling/sun logic will be computed for the Netherlands.
+  # elevation is in METRES (both here and in Home Assistant).
+  latitude: YOUR_LATITUDE
+  longitude: YOUR_LONGITUDE
+  elevation: YOUR_ELEVATION_IN_METRES
+  time_zone: YOUR_TIME_ZONE   # e.g. America/Los_Angeles
+
+  plugins:
+    HASS:
+      type: hass
+      token: !env_var SUPERVISOR_TOKEN
+
+http:
+  url: http://0.0.0.0:5050
+admin:
+api:
+hadashboard:
