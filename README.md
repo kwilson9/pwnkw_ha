@@ -10,6 +10,7 @@ just the piece you want.
 |---|---|
 | [**Discogs → Sonos Jukebox**](projects/discogs-jukebox/) | Shows a random record from your Discogs collection on a dashboard tile — tap to play the album on Sonos (via Apple Music), double-tap to shuffle, hold to open Discogs, plus a "Play Artist Mix" button. |
 | [**Mailbox Item Tracker**](projects/mailbox-tracker/) | Live count of uncollected items in your remote/CMRA mailbox (e.g. Anytime Mailbox), counted in real time from the provider's "new mail" emails via IMAP, and auto-reset to zero when you arrive to collect. |
+| [**Nanoleaf Room Clock**](projects/nanoleaf-clock-bar/) | Turns a Nanoleaf Lines bar into a linear clock — minutes fill left to right, with an outdoor-temperature gauge, an overnight heartbeat, and a meeting countdown that drains the bar to empty exactly at meeting time. AppDaemon app driving the device over its local REST API. |
 
 *More on the way.*
 

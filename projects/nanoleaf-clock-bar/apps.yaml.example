@@ -1,0 +1,26 @@
+---
+# AppDaemon app registration for the Nanoleaf Room Clock.
+# Copy into your AppDaemon apps directory as `apps.yaml` (or merge into it).
+#
+# NOTE: this file must live in the directory AppDaemon actually reads. On the
+# Home Assistant OS add-on that is NOT necessarily where you think — see the
+# "AppDaemon reads a different /config than you do" section of the README.
+
+nanoleaf_clock:
+  module: nanoleaf_clock_bar
+  class: NanoleafClock
+
+# --- Hardening (recommended, not required) -----------------------------------
+# This project ships with the device IP and auth token as constants at the top
+# of nanoleaf_clock_bar.py, which is simple but puts a credential in your code.
+# AppDaemon supports !secret natively (secrets.yaml in ITS OWN config dir, not
+# Home Assistant's), so you can move them out:
+#
+#   nanoleaf_clock:
+#     module: nanoleaf_clock_bar
+#     class: NanoleafClock
+#     ip: !secret nanoleaf_ip
+#     token: !secret nanoleaf_token
+#
+# then read them in initialize() via self.args["ip"] / self.args["token"]
+# instead of the module-level constants.
