@@ -42,6 +42,13 @@ No cloud webhook, no external server, no LLM — just an IMAP event and a zone.
 - Your mailbox notifications delivered to an **IMAP-accessible inbox** (built against **Fastmail**; any IMAP host works).
 - A provider that emails item notifications (built against **Anytime Mailbox**; adjust the search + regex for others).
 - For the auto-reset only: a **person** entity with device tracking and a **zone** at your mailbox's address. (The manual button works without them.)
+  - ⚠️ **Make that zone at least ~100 m.** A tight, geographically "accurate" zone
+    is the most likely reason the auto-reset never fires: phone geofencing is far
+    coarser than the map suggests, and a small radius sits below the practical
+    floor iOS will reliably report enter/exit for. This project's own zone started
+    at 25 m, never triggered, and was widened to **100 m** to fix it. The 1-minute
+    dwell in the trigger — not a small radius — is what keeps drive-bys from
+    counting as a pickup.
 
 ## Install
 
@@ -52,7 +59,7 @@ No cloud webhook, no external server, no LLM — just an IMAP event and a zone.
    - **Include "Body text"** so the event carries the body to parse.
    - *Tip:* don't filter on `UnSeen` if something marks these read quickly (you'd match nothing) — filter by sender/subject as above; the UID dedup handles the rest.
 2. **Package:** copy `packages/mailbox_tracker.yaml` into your HA `packages/` folder and add the include from [`configuration.example.yaml`](configuration.example.yaml).
-3. **Edit two references** in the package: list everyone who collects the mail under the pickup trigger (`person.you`, `person.partner`, …), and ensure a `zone.mailbox` exists at your mailbox's address (or rename the zone reference).
+3. **Edit two references** in the package: list everyone who collects the mail under the pickup trigger (`person.you`, `person.partner`, …), and ensure a `zone.mailbox` exists at your mailbox's address (or rename the zone reference). **Give the zone a ~100 m radius** — see the warning under [Requirements](#requirements).
 4. **Restart** Home Assistant.
 5. **Dashboard:** add the card from [`dashboard/mailbox_card.yaml`](dashboard/mailbox_card.yaml).
 6. **Seed** the current real count via the button/helper — you're live.
