@@ -57,7 +57,7 @@ automation:
     description: >-
       Single-stack mailbox item tracker. Named triggers -> choose tree.
       arrival = a provider "New Mail" notice via the IMAP imap_content event ->
-      add N to the count (UID-deduped, startup-skip). pickup = someone at the
+      add N to the count (UID-deduped). pickup = someone at the
       mailbox (zone.mailbox) for 1+ min -> reset to 0. manual = reset button.
       pickup/manual also stamp last_mailbox_pickup.
     mode: queued        # arrival read-add-write must serialize; never cancel
@@ -85,11 +85,26 @@ automation:
                 id: [arrival]
               # Guarded with trigger.platform=='event' — trigger.event.data
               # raises on the non-event (pickup/manual) triggers in this stack.
+              #
+              # `initial` is True on an ADD and False on a REMOVAL. It is NOT a
+              # startup flag, despite what the integration docs suggest ("True =
+              # startup / False = removal"). Requiring `initial` is what keeps
+              # removal events — fired when a matching mail leaves the folder —
+              # from being counted as arrivals. Verified against a real payload
+              # 2026-08-21; this clause was inverted before then and silently
+              # dropped every genuine notice.
+              #
+              # Startup and re-sync replays are handled by the UID high-water
+              # mark below, which is the only startup guard and always was.
+              #
+              # default(true): if the key ever disappears upstream, fail toward
+              # counting (a visible over-count you can clear with the button)
+              # rather than toward silence (mail you never hear about).
               - condition: template
                 value_template: >-
                   {{ trigger.platform == 'event'
                      and (trigger.event.data.uid | int(0)) > (states('input_number.mailbox_last_uid') | int(0))
-                     and not (trigger.event.data.initial | default(false))
+                     and (trigger.event.data.initial | default(true))
                      and 'New Mail' in (trigger.event.data.subject | default('')) }}
             sequence:
               - alias: "Add N items parsed from the email body"
