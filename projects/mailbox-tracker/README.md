@@ -30,6 +30,7 @@ Provider "new item" email ─► your inbox ─► HA IMAP ─(imap_content even
 - **Arrival** — Your provider (e.g. **Anytime Mailbox**) emails a "*N* new mail item(s)…" notice. A HA **IMAP** integration watches your inbox for those and fires an `imap_content` event. An automation:
   - **parses `N`** from the email body (`regex_findall('(\d+)\s+new mail item')`),
   - **adds it** to `input_number.mailbox_items_waiting`,
+  - **counts adds, not removals** — the event's `initial` field is `True` for an add and `False` for a removal (it is *not* a startup flag),
   - **dedups** with a UID high-water mark (`input_number.mailbox_last_uid`). IMAP UIDs only increase, so "count only if UID > last seen" is idempotent — restarts and re-syncs can't double-count, and the automation never has to write back to your mailbox.
 - **Pickup** — a **zone** at your mailbox's address plus the `person` entities of everyone who collects (list them all in the trigger). Enter the zone and stay **≥1 minute** (a **dwell filter**, so a drive-by doesn't count), and the count resets to 0 and stamps `input_datetime.last_mailbox_pickup`. Assumes you clear the whole box on a visit.
 - **Backstop** — an `input_button` to zero it by hand if presence ever misses.
@@ -64,16 +65,18 @@ From **Developer Tools ▸ Events**, fire event type `imap_content` with:
 ```yaml
 subject: "New Mail"
 uid: 999999
-initial: false
+initial: true
 text: "1 new mail item(s) have been added to your mailbox."
 ```
 
 `mailbox_items_waiting` should jump by 1 and `mailbox_last_uid` to 999999. Re-fire with the same or a lower UID → no change (dedup proven). Set both back to 0 when done.
 
+> **`initial: true` is not a typo.** Real `imap_content` events carry `initial: True` on an **add** and `False` on a **removal** — it is not a startup flag, despite the integration docs reading that way. An earlier version of this project tested with `initial: false`, which passed the synthetic test and then dropped every real notice on the floor. If you hand-test, test with `true`, or you are testing the wrong path.
+
 ## Files
 
 ```
-packages/mailbox_tracker.yaml   # helpers (count, UID mark, pickup time, reset button) + 3 automations
+packages/mailbox_tracker.yaml   # helpers (count, UID mark, pickup time, reset button) + 1 automation
 dashboard/mailbox_card.yaml     # glanceable entities card
 configuration.example.yaml      # the packages: include line
 ```
