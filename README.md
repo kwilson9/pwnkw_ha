@@ -42,7 +42,8 @@ Start from the scaffold in
 1. Copy `projects/_template/` to `projects/<your-project>/`.
 2. Delete the `.gitkeep` files and any folders/stubs the project doesn't use.
 3. Fill in the project's `README.md`.
-4. Add a row to the **Projects** table above.
+4. List it in both indexes: the **Projects** table above, and `projects/README.md`
+   (add its install manifest there — runtime and file shape).
 5. Append any secrets to [`secrets.yaml.example`](secrets.yaml.example) under a new heading.
 
 ## Repo layout
@@ -54,6 +55,9 @@ pwnkw_ha/
 ├── CNAME                  # custom domain for the published site
 ├── .gitignore             # excludes secrets.yaml, .storage, logs, db
 ├── .github/FUNDING.yml    # Sponsor button
+├── _config.yml            # Jekyll config for the published site
+├── _layouts/default.html  # page shell for ha.206yall.com
+├── assets/css/site.css    # site styling
 ├── secrets.yaml.example   # aggregated secret placeholders, grouped by project
 └── projects/
     ├── README.md          # project index

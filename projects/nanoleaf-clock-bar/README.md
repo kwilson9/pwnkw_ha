@@ -80,7 +80,7 @@ Two things that will cost you an evening if you don't know them:
   reverse it to get physical left→right. Don't try to cluster by `x`.
 
 Panel IDs are per-device and **change when you replace a bar**, so yours will differ.
-Discover your own with the tools in [`tools/`](tools/) — see [Panel discovery](#panel-discovery).
+Discover your own with the tools in [`tools/`](https://github.com/kwilson9/pwnkw_ha/tree/main/projects/nanoleaf-clock-bar/tools) — see [Panel discovery](#panel-discovery).
 
 ## Requirements
 
