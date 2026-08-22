@@ -85,5 +85,5 @@ you can [buy me a beer](https://buymeacoffee.com/bbzpt4y45mz) 🍺
 
 ## License
 
-[MIT](LICENSE) — do what you like, no warranty. Trademarks (Discogs, Apple Music, Sonos) belong
+[MIT](LICENSE) — do what you like, no warranty. Trademarks (Discogs, Apple Music, Sonos, Anytime Mailbox, Fastmail, Nanoleaf) belong
 to their respective owners; this repo is not affiliated with or endorsed by any of them.
