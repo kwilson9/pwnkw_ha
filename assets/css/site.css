@@ -169,6 +169,34 @@ body{
   font-weight:500;letter-spacing:.05em;text-transform:uppercase;font-size:15px;}
 .wrap tbody td a:hover{color:var(--lichen);}
 
+/* ---------- project cards + install manifest ----------
+   The manifest is the page's one signature: each project's real runtime and
+   file shape, in the same tracked-uppercase idiom 206yall.com uses for its
+   coordinate line. It answers "can I install this, and where does it go?" */
+.wrap h3:has(+ .manifest){
+  margin:0 0 .5rem;font-size:16px;letter-spacing:.05em;color:var(--fog);
+}
+.wrap h3:has(+ .manifest) a{
+  border-bottom:none;font-family:'Oswald',sans-serif;font-weight:500;
+  text-transform:uppercase;color:var(--fog);
+}
+.wrap h3:has(+ .manifest) a:hover{color:var(--lichen);}
+.wrap .manifest{
+  font-family:'IBM Plex Mono',ui-monospace,monospace;
+  font-size:10.5px;letter-spacing:.185em;text-transform:uppercase;
+  color:var(--haze);margin:0 0 .85rem;
+  padding-left:1rem;position:relative;
+}
+.wrap .manifest::before{
+  content:"";position:absolute;left:0;top:.52em;
+  width:8px;height:2px;background:var(--lichen);border-radius:2px;
+}
+.wrap h3:has(+ .manifest) ~ p{color:var(--haze);}
+.wrap h3:has(+ .manifest){
+  border-top:1px solid var(--edge);padding-top:1.8rem;margin-top:2.2rem;
+}
+.wrap h2 + h3:has(+ .manifest){border-top:none;padding-top:0;margin-top:1.6rem;}
+
 /* ---------- images / the beer button ---------- */
 .wrap img{max-width:100%;height:auto;vertical-align:middle;}
 .wrap a:has(img){border-bottom:none;display:inline-block;
