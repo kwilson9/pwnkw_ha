@@ -224,6 +224,25 @@ body{
 }
 .wrap h2 + h3:has(+ .manifest){border-top:none;padding-top:0;margin-top:1.6rem;}
 
+/* ---------- per-project escape hatch ----------
+   Deliberately quieter than both the project name and the manifest: this is
+   the door out, not the thing to land on. Two selector shapes because the
+   table cell carries the class on the <a> and the card carries it on a <p>.
+   .wrap a.source is (0,2,1) so it beats .wrap tbody td a at (0,1,3). */
+.wrap p.source{margin:-.45rem 0 .95rem;line-height:1.2;}
+.wrap p.source a,
+.wrap a.source{
+  font-family:'Oswald',sans-serif;font-weight:300;font-size:10px;
+  letter-spacing:.16em;text-transform:uppercase;
+  color:var(--muted);border-bottom:none;
+  transition:color .16s ease;
+}
+.wrap p.source a:hover,.wrap a.source:hover{color:var(--accent);}
+.wrap p.source a:focus-visible,.wrap a.source:focus-visible{
+  outline:3px solid var(--accent);outline-offset:3px;border-radius:2px;
+}
+.wrap tbody td:first-child a.source{display:inline-block;margin-top:.4rem;}
+
 /* ---------- images / the beer button ---------- */
 .wrap img{max-width:100%;height:auto;vertical-align:middle;}
 .wrap a:has(img){border-bottom:none;display:inline-block;
