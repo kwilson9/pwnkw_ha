@@ -30,9 +30,34 @@
   <p class="fine">Seattle · Forever Hopeful</p>
   <p class="fine tiny">
     <a href="https://github.com/kwilson9/pwnkw_ha">Source on GitHub</a> ·
-    MIT · No trackers, no analytics
+    MIT · Fonts served by Google, nothing else leaves your device
   </p>
 </footer>
+
+
+<script>
+// Two separate signals, deliberately not the same thing:
+//   .is-external  -> this link leaves the site        (gets the arrow)
+//   target=_blank -> and it opens a new tab           (gets the spoken note)
+// github.com leaves the site but navigates in place, so it takes the arrow
+// and no note. 206yall.com is the parent, treated as staying home.
+(function () {
+  var HOME = /(^|\.)206yall\.com$/, GH = /(^|\.)github\.com$/;
+  var links = document.querySelectorAll('a[href]');
+  for (var i = 0; i < links.length; i++) {
+    var a = links[i], h = a.hostname;
+    if (!h || h === location.hostname || HOME.test(h)) continue;
+    a.className = (a.className ? a.className + ' ' : '') + 'is-external';
+    if (GH.test(h)) continue;
+    a.target = '_blank';
+    a.rel = (a.rel ? a.rel + ' ' : '') + 'noopener noreferrer';
+    var note = document.createElement('span');
+    note.className = 'ext-note';
+    note.textContent = ' (opens in a new tab)';
+    a.appendChild(note);
+  }
+})();
+</script>
 
 </body>
 </html>

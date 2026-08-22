@@ -8,9 +8,9 @@ just the piece you want.
 
 | Project | What it does |
 |---|---|
-| [**Discogs → Sonos Jukebox**](projects/discogs-jukebox/)<br><a class="source" href="https://github.com/kwilson9/pwnkw_ha/tree/main/projects/discogs-jukebox">Source on GitHub &#8599;</a> | Shows a random record from your Discogs collection on a dashboard tile — tap to play the album on Sonos (via Apple Music), double-tap to shuffle, hold to open Discogs, plus a "Play Artist Mix" button. |
-| [**Mailbox Item Tracker**](projects/mailbox-tracker/)<br><a class="source" href="https://github.com/kwilson9/pwnkw_ha/tree/main/projects/mailbox-tracker">Source on GitHub &#8599;</a> | Live count of uncollected items in your remote/CMRA mailbox (e.g. Anytime Mailbox), counted in real time from the provider's "new mail" emails via IMAP, and auto-reset to zero when you arrive to collect. |
-| [**Nanoleaf Room Clock**](projects/nanoleaf-clock-bar/)<br><a class="source" href="https://github.com/kwilson9/pwnkw_ha/tree/main/projects/nanoleaf-clock-bar">Source on GitHub &#8599;</a> | Turns a Nanoleaf Lines bar into a linear clock — minutes fill left to right, with an outdoor-temperature gauge, an overnight heartbeat, and a meeting countdown that drains the bar to empty exactly at meeting time. AppDaemon app driving the device over its local REST API. |
+| [**Discogs → Sonos Jukebox**](projects/discogs-jukebox/)<br><a class="source" href="https://github.com/kwilson9/pwnkw_ha/tree/main/projects/discogs-jukebox">Source on GitHub</a> | Shows a random record from your Discogs collection on a dashboard tile — tap to play the album on Sonos (via Apple Music), double-tap to shuffle, hold to open Discogs, plus a "Play Artist Mix" button. |
+| [**Mailbox Item Tracker**](projects/mailbox-tracker/)<br><a class="source" href="https://github.com/kwilson9/pwnkw_ha/tree/main/projects/mailbox-tracker">Source on GitHub</a> | Live count of uncollected items in your remote/CMRA mailbox (e.g. Anytime Mailbox), counted in real time from the provider's "new mail" emails via IMAP, and auto-reset to zero when you arrive to collect. |
+| [**Nanoleaf Room Clock**](projects/nanoleaf-clock-bar/)<br><a class="source" href="https://github.com/kwilson9/pwnkw_ha/tree/main/projects/nanoleaf-clock-bar">Source on GitHub</a> | Turns a Nanoleaf Lines bar into a linear clock — minutes fill left to right, with an outdoor-temperature gauge, an overnight heartbeat, and a meeting countdown that drains the bar to empty exactly at meeting time. AppDaemon app driving the device over its local REST API. |
 
 *More on the way.*
 
@@ -82,7 +82,7 @@ pwnkw_ha/
 These projects are free and always will be. If one of them saved you an evening,
 you can [buy me a beer](https://buymeacoffee.com/bbzpt4y45mz) 🍺
 
-[![Buy me a beer](https://img.buymeacoffee.com/button-api/?text=Buy%20me%20a%20beer&emoji=%F0%9F%8D%BA&slug=bbzpt4y45mz&button_colour=4E7A22&font_colour=ffffff&font_family=Bree&outline_colour=4E7A22&coffee_colour=ffffff)](https://buymeacoffee.com/bbzpt4y45mz)
+[![Buy me a beer](assets/img/buy-me-a-beer.svg)](https://buymeacoffee.com/bbzpt4y45mz)
 
 ## License
 
