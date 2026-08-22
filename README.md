@@ -16,15 +16,12 @@ just the piece you want.
 
 ## Conventions
 
-Every project in this repo follows the same rules, so they're predictable to install and safe to publish:
+Every project in this repo follows the same rules, so they're predictable to install:
 
 - **Self-contained.** Each project is a folder under `projects/<name>/` with its own `README.md`
   plus whatever that project actually needs. Config-based projects carry `sensors/`, `rest/`,
   `scripts.yaml`, `dashboard/` and a `configuration.example.yaml` showing the `!include` lines
   to add; standalone apps (e.g. AppDaemon) ship their code and their own example config instead.
-- **No secrets in git.** All credentials go through Home Assistant's `secrets.yaml` (git-ignored)
-  referenced via `!secret`. See [`secrets.yaml.example`](secrets.yaml.example) for the values each
-  project needs.
 - **Documented.** Each project's README covers requirements, install steps, and how it works.
 
 ## Using a project
