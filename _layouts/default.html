@@ -36,17 +36,25 @@
 
 
 <script>
-// Links off this site open in a new tab, so a visitor never loses the page.
-// Deliberate exceptions: this host, the rest of 206yall.com, and github.com -
-// GitHub is the intended way out of the wrapper, so it navigates in place.
+// Two separate signals, deliberately not the same thing:
+//   .is-external  -> this link leaves the site        (gets the arrow)
+//   target=_blank -> and it opens a new tab           (gets the spoken note)
+// github.com leaves the site but navigates in place, so it takes the arrow
+// and no note. 206yall.com is the parent, treated as staying home.
 (function () {
-  var KEEP = /(^|\.)206yall\.com$/, GH = /(^|\.)github\.com$/;
+  var HOME = /(^|\.)206yall\.com$/, GH = /(^|\.)github\.com$/;
   var links = document.querySelectorAll('a[href]');
   for (var i = 0; i < links.length; i++) {
     var a = links[i], h = a.hostname;
-    if (!h || h === location.hostname || KEEP.test(h) || GH.test(h)) continue;
+    if (!h || h === location.hostname || HOME.test(h)) continue;
+    a.className = (a.className ? a.className + ' ' : '') + 'is-external';
+    if (GH.test(h)) continue;
     a.target = '_blank';
     a.rel = (a.rel ? a.rel + ' ' : '') + 'noopener noreferrer';
+    var note = document.createElement('span');
+    note.className = 'ext-note';
+    note.textContent = ' (opens in a new tab)';
+    a.appendChild(note);
   }
 })();
 </script>

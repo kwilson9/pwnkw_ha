@@ -243,6 +243,25 @@ body{
 }
 .wrap tbody td:first-child a.source{display:inline-block;margin-top:.4rem;}
 
+/* ---------- leaving-the-site marker ----------
+   The arrow means one thing only: this link leaves the site. The spoken
+   note is separate and only appears where a new tab actually opens, so a
+   screen reader is warned about the tab change rather than the arrow. */
+.wrap a.is-external::after{
+  content:"\2197";
+  display:inline-block;font-size:.72em;line-height:1;
+  margin-left:.22em;vertical-align:.14em;
+  color:var(--muted);transition:color .16s ease;
+}
+.wrap a.is-external:hover::after{color:var(--accent);}
+/* an image link is its own affordance - an arrow after the button reads as debris */
+.wrap a.is-external:has(img)::after{content:none;}
+
+.ext-note{
+  position:absolute;width:1px;height:1px;overflow:hidden;
+  clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;
+}
+
 /* ---------- images / the beer button ---------- */
 .wrap img{max-width:100%;height:auto;vertical-align:middle;}
 .wrap a:has(img){border-bottom:none;display:inline-block;
