@@ -19,8 +19,9 @@ just the piece you want.
 Every project in this repo follows the same rules, so they're predictable to install and safe to publish:
 
 - **Self-contained.** Each project is a folder under `projects/<name>/` with its own `README.md`
-  and, where relevant, `sensors/`, `rest/`, `scripts.yaml`, `dashboard/`, and a
-  `configuration.example.yaml` snippet showing any `!include` lines to add.
+  plus whatever that project actually needs. Config-based projects carry `sensors/`, `rest/`,
+  `scripts.yaml`, `dashboard/` and a `configuration.example.yaml` showing the `!include` lines
+  to add; standalone apps (e.g. AppDaemon) ship their code and their own example config instead.
 - **No secrets in git.** All credentials go through Home Assistant's `secrets.yaml` (git-ignored)
   referenced via `!secret`. See [`secrets.yaml.example`](secrets.yaml.example) for the values each
   project needs.
@@ -30,13 +31,16 @@ Every project in this repo follows the same rules, so they're predictable to ins
 
 1. Open the project folder and read its `README.md`.
 2. Add any required secrets to your `secrets.yaml` (see [`secrets.yaml.example`](secrets.yaml.example)).
-3. Copy the project's files into your HA config — merge its `scripts.yaml`, add the `!include`
-   lines from its `configuration.example.yaml`.
-4. Restart / reload as the project's README says, then add its dashboard cards.
+3. Copy the project's files into place — for config-based projects that means merging
+   `scripts.yaml` and adding the `!include` lines from `configuration.example.yaml`; for
+   standalone apps, follow the install steps in that project's README.
+4. Restart / reload as the project's README says, then add its dashboard cards if it has any.
 
 ## Adding a new project
 
-Start from the scaffold in [`projects/_template/`](projects/_template/):
+Start from the scaffold in
+[`projects/_template/`](https://github.com/kwilson9/pwnkw_ha/tree/main/projects/_template)
+(browsable on GitHub only — Jekyll excludes leading-underscore directories from this site):
 
 1. Copy `projects/_template/` to `projects/<your-project>/`.
 2. Delete the `.gitkeep` files and any folders/stubs the project doesn't use.
@@ -50,18 +54,26 @@ Start from the scaffold in [`projects/_template/`](projects/_template/):
 pwnkw_ha/
 ├── README.md              # this index
 ├── LICENSE                # MIT
+├── CNAME                  # custom domain for the published site
 ├── .gitignore             # excludes secrets.yaml, .storage, logs, db
+├── .github/FUNDING.yml    # Sponsor button
 ├── secrets.yaml.example   # aggregated secret placeholders, grouped by project
 └── projects/
+    ├── README.md          # project index
     ├── _template/         # copy this to start a new project
-    ├── discogs-jukebox/   # first project
+    ├── discogs-jukebox/   # Discogs → Sonos random-record tile
     │   ├── README.md
     │   ├── configuration.example.yaml
     │   └── sensors/  rest/  scripts.yaml  dashboard/
-    └── mailbox-tracker/   # IMAP-driven mailbox item counter
+    ├── mailbox-tracker/   # IMAP-driven mailbox item counter
+    │   ├── README.md
+    │   ├── configuration.example.yaml
+    │   └── packages/  dashboard/
+    └── nanoleaf-clock-bar/  # AppDaemon linear clock on Nanoleaf Lines
         ├── README.md
-        ├── configuration.example.yaml
-        └── packages/  dashboard/
+        ├── nanoleaf_clock_bar.py
+        ├── appdaemon.example.yaml  apps.yaml.example
+        └── tools/
 ```
 
 ## Support
