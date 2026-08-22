@@ -2,20 +2,47 @@
    extended with a monospace role for config-heavy documentation. */
 
 :root{
-  --moss:#0E1B1A;   /* page ground        */
-  --deep:#122422;   /* raised panel       */
-  --well:#0A1615;   /* code, recessed     */
-  --fog:#E8F0EC;    /* primary text       */
-  --haze:#8FA9A2;   /* secondary text     */
-  --lichen:#A9D96C; /* accent             */
-  --edge:#22403C;   /* hairlines          */
+  /* Light — the default. A moss-tinted paper, not a neutral grey and not cream. */
+  --ground:#F2F5F1;  /* page                    */
+  --raised:#E7EDE6;  /* panel                   */
+  --well:#E9EFE8;    /* code                    */
+  --text:#12211F;    /* body            15.1:1  */
+  --muted:#51665F;   /* secondary        5.6:1  */
+  --accent:#416B1B;  /* links, rules     5.7:1  */
+  --edge:#D2DCD0;    /* hairlines               */
+  --dim:#6B807A;     /* code comments           */
+  --fine:#5C716B;    /* footer                  */
+  --finer:#6B807A;   /* footer, smaller         */
+  --num:#1F6B5E;     /* numbers in code         */
+  --err:#A33A3A;
+  --strong:#000000;
+  --rain:#51665F;    /* streaks read as rain on a pale sky */
+}
+
+/* Dark — 206yall.com's own palette, for anyone whose OS asks for it.
+   Guarded so an explicit light choice still wins. */
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#0E1B1A; --raised:#122422; --well:#0A1615;
+    --text:#E8F0EC;   --muted:#8FA9A2;  --accent:#A9D96C;
+    --edge:#22403C;   --dim:#5E7A74;    --fine:#7C948E;
+    --finer:#6A827D;  --num:#7FB3A8;    --err:#E8A0A0;
+    --strong:#FFFFFF; --rain:#A9D96C;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0E1B1A; --raised:#122422; --well:#0A1615;
+  --text:#E8F0EC;   --muted:#8FA9A2;  --accent:#A9D96C;
+  --edge:#22403C;   --dim:#5E7A74;    --fine:#7C948E;
+  --finer:#6A827D;  --num:#7FB3A8;    --err:#E8A0A0;
+  --strong:#FFFFFF; --rain:#A9D96C;
 }
 
 *{box-sizing:border-box;}
 html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
-html,body{background:var(--moss);}
+html,body{background:var(--ground);}
 body{
-  margin:0;color:var(--fog);
+  margin:0;color:var(--text);
   font-family:'Karla',system-ui,sans-serif;
   font-size:17px;line-height:1.65;
   -webkit-font-smoothing:antialiased;
@@ -32,23 +59,23 @@ body{
   display:inline-block;
   font-family:'Oswald',sans-serif;font-weight:300;font-size:11px;
   letter-spacing:.22em;text-transform:uppercase;
-  color:var(--haze);text-decoration:none;margin-bottom:1.5rem;
+  color:var(--muted);text-decoration:none;margin-bottom:1.5rem;
   transition:color .16s ease;
 }
-.up:hover{color:var(--lichen);}
+.up:hover{color:var(--accent);}
 .lockup{
   font-family:'Oswald',sans-serif;font-weight:600;
   font-size:clamp(38px,9vw,64px);line-height:1;letter-spacing:.01em;
   margin:0 0 .55rem;text-transform:uppercase;
 }
-.lockup .tld{font-weight:300;color:var(--haze);}
+.lockup .tld{font-weight:300;color:var(--muted);}
 .place{
   font-family:'Oswald',sans-serif;font-weight:300;font-size:12px;
   letter-spacing:.42em;text-transform:uppercase;
-  color:var(--haze);margin:0;padding-left:.24em;
+  color:var(--muted);margin:0;padding-left:.24em;
 }
 .rule{
-  width:44px;height:2px;background:var(--lichen);
+  width:44px;height:2px;background:var(--accent);
   border:none;border-radius:2px;margin:1.6rem 0 0;
   transform-origin:left center;animation:draw .7s cubic-bezier(.2,.7,.3,1) both;
 }
@@ -58,8 +85,8 @@ body{
 .rain{position:absolute;inset:0;z-index:0;opacity:.5;}
 .rain i{
   position:absolute;top:-60px;width:1px;height:52px;
-  background:linear-gradient(to bottom,transparent,var(--lichen));
-  opacity:.16;animation:fall 1.9s linear infinite;
+  background:linear-gradient(to bottom,transparent,var(--rain));
+  opacity:.13;animation:fall 1.9s linear infinite;
 }
 .rain i:nth-child(1){left:12%;animation-delay:0s;}
 .rain i:nth-child(2){left:34%;animation-delay:.6s;height:38px;}
@@ -79,37 +106,37 @@ body{
 .wrap > h1:first-child,.wrap > h2:first-child{margin-top:0;}
 .wrap h1{font-weight:600;font-size:26px;letter-spacing:.06em;}
 .wrap h2{
-  font-weight:500;font-size:15px;letter-spacing:.26em;color:var(--haze);
+  font-weight:500;font-size:15px;letter-spacing:.26em;color:var(--muted);
   padding-bottom:.7rem;border-bottom:1px solid var(--edge);
   display:flex;align-items:center;gap:.7rem;
 }
 .wrap h2::before{
   content:"";flex:0 0 auto;width:14px;height:2px;
-  background:var(--lichen);border-radius:2px;
+  background:var(--accent);border-radius:2px;
 }
-.wrap h3{font-weight:500;font-size:13px;letter-spacing:.2em;color:var(--fog);margin-top:2rem;}
+.wrap h3{font-weight:500;font-size:13px;letter-spacing:.2em;color:var(--text);margin-top:2rem;}
 
 /* home: the masthead already carries the title, so the README's h1 would
    restate it (and give the page a second h1). Lead paragraph carries instead. */
 .home .wrap > h1:first-child{display:none;}
 .home .wrap > p:first-of-type{
-  font-size:19px;line-height:1.6;color:var(--fog);margin-bottom:1.6rem;
+  font-size:19px;line-height:1.6;color:var(--text);margin-bottom:1.6rem;
 }
-.home .wrap > p:first-of-type strong{font-weight:600;color:#fff;}
+.home .wrap > p:first-of-type strong{font-weight:600;color:var(--strong);}
 
 /* ---------- prose ---------- */
 .wrap p{margin:0 0 1.15rem;}
-.wrap strong{font-weight:700;color:#fff;}
-.wrap em{color:var(--haze);}
-.wrap a{color:var(--fog);text-decoration:none;border-bottom:1px solid var(--lichen);
+.wrap strong{font-weight:700;color:var(--strong);}
+.wrap em{color:var(--muted);}
+.wrap a{color:var(--text);text-decoration:none;border-bottom:1px solid var(--accent);
   transition:color .16s ease,background-color .16s ease;}
-.wrap a:hover{color:var(--lichen);}
+.wrap a:hover{color:var(--accent);}
 .wrap ul,.wrap ol{margin:0 0 1.3rem;padding-left:1.15rem;}
 .wrap li{margin-bottom:.5rem;}
-.wrap li::marker{color:var(--lichen);}
+.wrap li::marker{color:var(--accent);}
 .wrap blockquote{
   margin:1.4rem 0;padding:.2rem 0 .2rem 1.1rem;
-  border-left:2px solid var(--edge);color:var(--haze);
+  border-left:2px solid var(--edge);color:var(--muted);
 }
 .wrap blockquote p:last-child{margin-bottom:0;}
 .wrap hr{border:none;border-top:1px solid var(--edge);margin:2.4rem 0;}
@@ -117,7 +144,7 @@ body{
 /* ---------- code ---------- */
 .wrap code{
   font-family:'IBM Plex Mono',ui-monospace,monospace;
-  font-size:.85em;background:var(--well);color:var(--lichen);
+  font-size:.85em;background:var(--well);color:var(--accent);
   padding:.13em .42em;border-radius:3px;border:1px solid var(--edge);
 }
 .wrap pre{
@@ -125,7 +152,7 @@ body{
   padding:1.05rem 1.15rem;overflow-x:auto;margin:0 0 1.4rem;
   font-size:13px;line-height:1.6;
 }
-.wrap pre code{background:none;border:none;padding:0;color:var(--haze);font-size:inherit;}
+.wrap pre code{background:none;border:none;padding:0;color:var(--muted);font-size:inherit;}
 
 /* ---------- syntax highlighting (Rouge) ----------
    The theme we replaced shipped its own; this is the moss-palette equivalent.
@@ -138,16 +165,16 @@ body{
   padding:1.05rem 1.15rem;margin:0 0 1.4rem;overflow-x:auto;
 }
 .wrap .highlight .c,.wrap .highlight .c1,.wrap .highlight .cm,
-.wrap .highlight .cp,.wrap .highlight .cs{color:#5E7A74;font-style:italic;}
+.wrap .highlight .cp,.wrap .highlight .cs{color:var(--dim);font-style:italic;}
 .wrap .highlight .na,.wrap .highlight .nt,.wrap .highlight .k,
-.wrap .highlight .kn,.wrap .highlight .kd,.wrap .highlight .kc{color:var(--lichen);}
+.wrap .highlight .kn,.wrap .highlight .kd,.wrap .highlight .kc{color:var(--accent);}
 .wrap .highlight .s,.wrap .highlight .s1,.wrap .highlight .s2,
-.wrap .highlight .se,.wrap .highlight .sb{color:var(--fog);}
+.wrap .highlight .se,.wrap .highlight .sb{color:var(--text);}
 .wrap .highlight .m,.wrap .highlight .mi,.wrap .highlight .mf,
-.wrap .highlight .no,.wrap .highlight .nb{color:#7FB3A8;}
-.wrap .highlight .p,.wrap .highlight .o,.wrap .highlight .pi{color:var(--haze);}
-.wrap .highlight .nf,.wrap .highlight .nc,.wrap .highlight .nn{color:var(--fog);font-weight:500;}
-.wrap .highlight .err{color:#E8A0A0;background:none;}
+.wrap .highlight .no,.wrap .highlight .nb{color:var(--num);}
+.wrap .highlight .p,.wrap .highlight .o,.wrap .highlight .pi{color:var(--muted);}
+.wrap .highlight .nf,.wrap .highlight .nc,.wrap .highlight .nn{color:var(--text);font-weight:500;}
+.wrap .highlight .err{color:var(--err);background:none;}
 
 /* ---------- tables ---------- */
 .wrap table{
@@ -156,42 +183,42 @@ body{
 }
 .wrap thead th{
   font-family:'Oswald',sans-serif;font-weight:500;font-size:11px;
-  letter-spacing:.2em;text-transform:uppercase;color:var(--haze);
+  letter-spacing:.2em;text-transform:uppercase;color:var(--muted);
   text-align:left;padding:0 0 .6rem;border-bottom:1px solid var(--edge);
 }
 .wrap tbody td{
   padding:1rem 1.4rem 1rem 0;border-bottom:1px solid var(--edge);
-  vertical-align:top;color:var(--haze);
+  vertical-align:top;color:var(--muted);
 }
-.wrap tbody td:first-child{width:34%;padding-right:1.8rem;color:var(--fog);}
+.wrap tbody td:first-child{width:34%;padding-right:1.8rem;color:var(--text);}
 .wrap tbody tr:last-child td{border-bottom:none;}
 .wrap tbody td a{border-bottom:none;font-family:'Oswald',sans-serif;
   font-weight:500;letter-spacing:.05em;text-transform:uppercase;font-size:15px;}
-.wrap tbody td a:hover{color:var(--lichen);}
+.wrap tbody td a:hover{color:var(--accent);}
 
 /* ---------- project cards + install manifest ----------
    The manifest is the page's one signature: each project's real runtime and
    file shape, in the same tracked-uppercase idiom 206yall.com uses for its
    coordinate line. It answers "can I install this, and where does it go?" */
 .wrap h3:has(+ .manifest){
-  margin:0 0 .5rem;font-size:16px;letter-spacing:.05em;color:var(--fog);
+  margin:0 0 .5rem;font-size:16px;letter-spacing:.05em;color:var(--text);
 }
 .wrap h3:has(+ .manifest) a{
   border-bottom:none;font-family:'Oswald',sans-serif;font-weight:500;
-  text-transform:uppercase;color:var(--fog);
+  text-transform:uppercase;color:var(--text);
 }
-.wrap h3:has(+ .manifest) a:hover{color:var(--lichen);}
+.wrap h3:has(+ .manifest) a:hover{color:var(--accent);}
 .wrap .manifest{
   font-family:'IBM Plex Mono',ui-monospace,monospace;
   font-size:10.5px;letter-spacing:.185em;text-transform:uppercase;
-  color:var(--haze);margin:0 0 .85rem;
+  color:var(--muted);margin:0 0 .85rem;
   padding-left:1rem;position:relative;
 }
 .wrap .manifest::before{
   content:"";position:absolute;left:0;top:.52em;
-  width:8px;height:2px;background:var(--lichen);border-radius:2px;
+  width:8px;height:2px;background:var(--accent);border-radius:2px;
 }
-.wrap h3:has(+ .manifest) ~ p{color:var(--haze);}
+.wrap h3:has(+ .manifest) ~ p{color:var(--muted);}
 .wrap h3:has(+ .manifest){
   border-top:1px solid var(--edge);padding-top:1.8rem;margin-top:2.2rem;
 }
@@ -210,14 +237,14 @@ body{
 }
 .fine{
   font-family:'Oswald',sans-serif;font-weight:300;font-size:11px;
-  letter-spacing:.22em;text-transform:uppercase;color:#7C948E;margin:0;
+  letter-spacing:.22em;text-transform:uppercase;color:var(--fine);margin:0;
 }
-.fine.tiny{font-size:9.5px;letter-spacing:.14em;color:#6A827D;margin-top:.6rem;}
+.fine.tiny{font-size:9.5px;letter-spacing:.14em;color:var(--finer);margin-top:.6rem;}
 .foot a{color:inherit;text-decoration:none;border-bottom:1px solid var(--edge);}
-.foot a:hover{color:var(--lichen);}
+.foot a:hover{color:var(--accent);}
 
 /* ---------- quality floor ---------- */
-a:focus-visible,.up:focus-visible{outline:3px solid var(--lichen);outline-offset:3px;border-radius:2px;}
+a:focus-visible,.up:focus-visible{outline:3px solid var(--accent);outline-offset:3px;border-radius:2px;}
 
 @media (max-width:620px){
   body{font-size:16px;}
