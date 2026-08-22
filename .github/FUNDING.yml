@@ -1,0 +1,3 @@
+# Shows the "Sponsor" button on the repo page.
+# Renders where <script> tags can't: GitHub strips scripts from README markdown.
+custom: ["https://buymeacoffee.com/bbzpt4y45mz"]

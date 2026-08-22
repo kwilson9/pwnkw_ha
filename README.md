@@ -64,6 +64,24 @@ pwnkw_ha/
         └── packages/  dashboard/
 ```
 
+## Support
+
+These projects are free and always will be. If one of them saved you an evening,
+you can [buy me a beer](https://buymeacoffee.com/bbzpt4y45mz) 🍺
+
+<!-- Two buttons below; exactly one renders on each surface.
+     - github.com strips <style> and <script> from markdown -> the static image below shows.
+     - The Pages site (Jekyll) keeps both -> the CSS hides the image and the script draws the live button.
+     Editing note: the slug bbzpt4y45mz appears in three places (here x2, and .github/FUNDING.yml). -->
+<style>.bmc-static { display: none; }</style>
+
+<p class="bmc-static">
+  <a href="https://buymeacoffee.com/bbzpt4y45mz"><img alt="Buy me a beer"
+     src="https://img.buymeacoffee.com/button-api/?text=Buy%20me%20a%20beer&amp;emoji=%F0%9F%8D%BA&amp;slug=bbzpt4y45mz&amp;button_colour=40DCA5&amp;font_colour=ffffff&amp;font_family=Bree&amp;outline_colour=000000&amp;coffee_colour=FFDD00"></a>
+</p>
+
+<script type="text/javascript" src="https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js" data-name="bmc-button" data-slug="bbzpt4y45mz" data-color="#40DCA5" data-emoji="🍺"  data-font="Bree" data-text="Buy me a beer" data-outline-color="#000000" data-font-color="#ffffff" data-coffee-color="#FFDD00" ></script>
+
 ## License
 
 [MIT](LICENSE) — do what you like, no warranty. Trademarks (Discogs, Apple Music, Sonos) belong
