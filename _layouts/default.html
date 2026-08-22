@@ -30,9 +30,26 @@
   <p class="fine">Seattle · Forever Hopeful</p>
   <p class="fine tiny">
     <a href="https://github.com/kwilson9/pwnkw_ha">Source on GitHub</a> ·
-    MIT · No trackers, no analytics
+    MIT · Fonts served by Google, nothing else leaves your device
   </p>
 </footer>
+
+
+<script>
+// Links off this site open in a new tab, so a visitor never loses the page.
+// Deliberate exceptions: this host, the rest of 206yall.com, and github.com -
+// GitHub is the intended way out of the wrapper, so it navigates in place.
+(function () {
+  var KEEP = /(^|\.)206yall\.com$/, GH = /(^|\.)github\.com$/;
+  var links = document.querySelectorAll('a[href]');
+  for (var i = 0; i < links.length; i++) {
+    var a = links[i], h = a.hostname;
+    if (!h || h === location.hostname || KEEP.test(h) || GH.test(h)) continue;
+    a.target = '_blank';
+    a.rel = (a.rel ? a.rel + ' ' : '') + 'noopener noreferrer';
+  }
+})();
+</script>
 
 </body>
 </html>

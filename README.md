@@ -82,7 +82,7 @@ pwnkw_ha/
 These projects are free and always will be. If one of them saved you an evening,
 you can [buy me a beer](https://buymeacoffee.com/bbzpt4y45mz) 🍺
 
-[![Buy me a beer](https://img.buymeacoffee.com/button-api/?text=Buy%20me%20a%20beer&emoji=%F0%9F%8D%BA&slug=bbzpt4y45mz&button_colour=4E7A22&font_colour=ffffff&font_family=Bree&outline_colour=4E7A22&coffee_colour=ffffff)](https://buymeacoffee.com/bbzpt4y45mz)
+[![Buy me a beer](assets/img/buy-me-a-beer.svg)](https://buymeacoffee.com/bbzpt4y45mz)
 
 ## License
 
