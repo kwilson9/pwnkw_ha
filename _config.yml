@@ -1,0 +1,8 @@
+title: HA
+tagline: Home Assistant projects
+description: Self-contained, copy-pasteable Home Assistant projects.
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: default

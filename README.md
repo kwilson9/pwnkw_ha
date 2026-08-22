@@ -16,15 +16,12 @@ just the piece you want.
 
 ## Conventions
 
-Every project in this repo follows the same rules, so they're predictable to install and safe to publish:
+Every project in this repo follows the same rules, so they're predictable to install:
 
 - **Self-contained.** Each project is a folder under `projects/<name>/` with its own `README.md`
   plus whatever that project actually needs. Config-based projects carry `sensors/`, `rest/`,
   `scripts.yaml`, `dashboard/` and a `configuration.example.yaml` showing the `!include` lines
   to add; standalone apps (e.g. AppDaemon) ship their code and their own example config instead.
-- **No secrets in git.** All credentials go through Home Assistant's `secrets.yaml` (git-ignored)
-  referenced via `!secret`. See [`secrets.yaml.example`](secrets.yaml.example) for the values each
-  project needs.
 - **Documented.** Each project's README covers requirements, install steps, and how it works.
 
 ## Using a project
@@ -45,7 +42,8 @@ Start from the scaffold in
 1. Copy `projects/_template/` to `projects/<your-project>/`.
 2. Delete the `.gitkeep` files and any folders/stubs the project doesn't use.
 3. Fill in the project's `README.md`.
-4. Add a row to the **Projects** table above.
+4. List it in both indexes: the **Projects** table above, and `projects/README.md`
+   (add its install manifest there — runtime and file shape).
 5. Append any secrets to [`secrets.yaml.example`](secrets.yaml.example) under a new heading.
 
 ## Repo layout
@@ -57,6 +55,9 @@ pwnkw_ha/
 ├── CNAME                  # custom domain for the published site
 ├── .gitignore             # excludes secrets.yaml, .storage, logs, db
 ├── .github/FUNDING.yml    # Sponsor button
+├── _config.yml            # Jekyll config for the published site
+├── _layouts/default.html  # page shell for ha.206yall.com
+├── assets/css/site.css    # site styling
 ├── secrets.yaml.example   # aggregated secret placeholders, grouped by project
 └── projects/
     ├── README.md          # project index
@@ -81,9 +82,9 @@ pwnkw_ha/
 These projects are free and always will be. If one of them saved you an evening,
 you can [buy me a beer](https://buymeacoffee.com/bbzpt4y45mz) 🍺
 
-[![Buy me a beer](https://img.buymeacoffee.com/button-api/?text=Buy%20me%20a%20beer&emoji=%F0%9F%8D%BA&slug=bbzpt4y45mz&button_colour=40DCA5&font_colour=ffffff&font_family=Bree&outline_colour=000000&coffee_colour=FFDD00)](https://buymeacoffee.com/bbzpt4y45mz)
+[![Buy me a beer](https://img.buymeacoffee.com/button-api/?text=Buy%20me%20a%20beer&emoji=%F0%9F%8D%BA&slug=bbzpt4y45mz&button_colour=4E7A22&font_colour=ffffff&font_family=Bree&outline_colour=4E7A22&coffee_colour=ffffff)](https://buymeacoffee.com/bbzpt4y45mz)
 
 ## License
 
-[MIT](LICENSE) — do what you like, no warranty. Trademarks (Discogs, Apple Music, Sonos) belong
+[MIT](LICENSE) — do what you like, no warranty. Trademarks (Discogs, Apple Music, Sonos, Anytime Mailbox, Fastmail, Nanoleaf) belong
 to their respective owners; this repo is not affiliated with or endorsed by any of them.

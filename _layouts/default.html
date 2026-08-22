@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% if page.url != "/" %}{{ page.title | default: "Projects" }} · {% endif %}HA · 206YALL.COM</title>
+<meta name="description" content="{{ site.description }}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;500;600&family=Karla:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ '/assets/css/site.css' | relative_url }}">
+</head>
+<body{% if page.url == "/" %} class="home"{% endif %}>
+
+<header class="mast">
+  <div class="rain" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+  <div class="mast-in">
+    <a class="up" href="https://206yall.com/">← 206YALL.COM</a>
+    <h1 class="lockup"><span class="bold">HA</span><span class="tld">.206YALL.COM</span></h1>
+    <p class="place">Home Assistant Projects</p>
+    <hr class="rule">
+  </div>
+</header>
+
+<main class="wrap">
+  {{ content }}
+</main>
+
+<footer class="foot">
+  <p class="fine">Seattle · Forever Hopeful</p>
+  <p class="fine tiny">
+    <a href="https://github.com/kwilson9/pwnkw_ha">Source on GitHub</a> ·
+    MIT · No trackers, no analytics
+  </p>
+</footer>
+
+</body>
+</html>
