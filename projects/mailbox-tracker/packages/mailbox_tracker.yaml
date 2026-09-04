@@ -11,11 +11,21 @@
 # ONE automation, single purpose: named triggers (arrival / pickup / manual)
 # feeding a choose tree.
 #
+# ---------------------------------------------------------------------------
+# ⚠ BREAKING CHANGE (2026-09): DEDUP NO LONGER USES `uid`. If you installed an
+#   earlier version of this project, YOUR COUNTER HAS PROBABLY BEEN SILENTLY
+#   DEAD. See the README section "Why the UID dedup was wrong". Upgrading:
+#   replace this file, add the new input_text helper, restart. You may safely
+#   delete `input_number.mailbox_last_uid` afterwards — nothing reads it.
+# ---------------------------------------------------------------------------
+#
 # BEFORE USE — change these to match your setup:
 #   • person.you / person.partner -> the person entities of everyone who
 #     collects the mail (add or remove lines under the pickup trigger)
 #   • zone.mailbox -> a zone you create at your mailbox's street address
 #   • the IMAP search + body regex assume Anytime Mailbox wording (see README)
+#   • OPTIONAL "file the email" steps at the end are DISABLED by default —
+#     read their comments before enabling, they move mail in your account
 #
 # The IMAP integration is added in the HA UI (Settings > Devices & Services >
 # Add > IMAP), NOT here. This package only consumes its event.
@@ -31,13 +41,30 @@ input_number:
     unit_of_measurement: items
     icon: mdi:mailbox
 
-  mailbox_last_uid:
-    name: Mailbox Last UID          # UID high-water mark — dedups IMAP re-fires
+input_text:
+  # Rolling list of the last 20 processed notices, newest first, as the emails'
+  # Date headers in epoch seconds, comma separated.
+  #
+  # WHY A LIST AND NOT A HIGH-WATER MARK: a list asks "have I already seen this
+  # exact notice?", which needs no assumption about ordering. A high-water mark
+  # asks "is this newer than the last one?", which silently drops a provider
+  # backfill — a real scenario when a provider goes dark for days and then sends
+  # a batch of catch-up notices.
+  #
+  # SIZING: input_text caps at 255 chars; an epoch + comma is ~11, so 20 entries
+  # is the practical ceiling (worst case measured at 219 chars). At one notice
+  # every few days that is months of memory — far more than the restart-replay
+  # case it exists to survive.
+  #
+  # `initial:` is deliberately NOT set. Setting it — even to "" — disables
+  # last-state restore, which would wipe the dedup list on every restart and
+  # recount whatever is still in the mailbox.
+  mailbox_processed_notices:
+    name: Mailbox Processed Notices
     min: 0
-    max: 4294967295
-    step: 1
-    mode: box
-    icon: mdi:pound
+    max: 255
+    mode: text
+    icon: mdi:mailbox-up
 
 input_datetime:
   last_mailbox_pickup:
@@ -57,9 +84,9 @@ automation:
     description: >-
       Single-stack mailbox item tracker. Named triggers -> choose tree.
       arrival = a provider "New Mail" notice via the IMAP imap_content event ->
-      add N to the count (UID-deduped). pickup = someone at the
-      mailbox (zone.mailbox) for 1+ min -> reset to 0. manual = reset button.
-      pickup/manual also stamp last_mailbox_pickup.
+      add N to the count, deduped on the email's Date against a rolling list.
+      pickup = someone at the mailbox (zone.mailbox) for 1+ min -> reset to 0.
+      manual = reset button. pickup/manual also stamp last_mailbox_pickup.
     mode: queued        # arrival read-add-write must serialize; never cancel
     max: 10
     triggers:
@@ -86,38 +113,126 @@ automation:
               # Guarded with trigger.platform=='event' — trigger.event.data
               # raises on the non-event (pickup/manual) triggers in this stack.
               #
-              # `initial` is True on an ADD and False on a REMOVAL. It is NOT a
-              # startup flag, despite what the integration docs suggest ("True =
-              # startup / False = removal"). Requiring `initial` is what keeps
-              # removal events — fired when a matching mail leaves the folder —
-              # from being counted as arrivals. Verified against a real payload
-              # 2026-08-21; this clause was inverted before then and silently
-              # dropped every genuine notice.
+              # DEDUP IS ON THE EMAIL'S `date`, NOT ON `uid`.
               #
-              # Startup and re-sync replays are handled by the UID high-water
-              # mark below, which is the only startup guard and always was.
+              #   `uid` CANNOT BE USED FOR THIS. The IMAP integration's code
+              #   owner states it plainly in the review of the PR that added the
+              #   field (home-assistant/core#114432): "Note that uid changes
+              #   when an email is removed from the mailbox, So it is not unique
+              #   to the message." It was merged knowingly, for delete/fetch
+              #   use — but the integration docs call it "Latest uid of the
+              #   message" and carry no warning, which is how earlier versions
+              #   of THIS project came to rely on it.
               #
-              # default(true): if the key ever disappears upstream, fail toward
-              # counting (a visible over-count you can clear with the button)
-              # rather than toward silence (mail you never hear about).
+              #   Observed in the wild: one message reported uid 51, 52, 53, 54
+              #   across four events in four seconds — same date, same subject,
+              #   same body — against a stored high-water mark of 92. Every
+              #   notice was discarded, silently, for eight days, and would have
+              #   been forever.
+              #
+              # The `date` header is stable for a given message and differs
+              # between messages, which is what dedup actually needs.
+              #
+              # The commas around both sides make this a whole-entry match, so
+              # one epoch can never match as a substring of another.
+              #
+              # `> 0` guard: as_timestamp returns 0 on an unparseable date, and
+              # without this a bad date would be stored as "0" and then match
+              # everything. It fails toward skipping one notice (recoverable
+              # with the button) rather than toward a runaway count.
+              #
+              # NOTE — there is deliberately NO `initial` clause any more.
+              # `initial` is False when a message is REMOVED from the search
+              # scope, so it did usefully suppress repeat events. The dedup list
+              # now does that job without depending on a field whose semantics
+              # the docs describe ambiguously. If you enable the optional move
+              # below, note that filing the email is itself a removal and will
+              # re-fire imap_content — the list absorbs it.
               - condition: template
                 value_template: >-
                   {{ trigger.platform == 'event'
-                     and (trigger.event.data.uid | int(0)) > (states('input_number.mailbox_last_uid') | int(0))
-                     and (trigger.event.data.initial | default(true))
-                     and 'New Mail' in (trigger.event.data.subject | default('')) }}
+                     and 'New Mail' in (trigger.event.data.get('subject',''))
+                     and (as_timestamp(trigger.event.data.get('date'), 0) | int(0)) > 0
+                     and (',' ~ (as_timestamp(trigger.event.data.get('date'), 0) | int(0)) | string ~ ',')
+                         not in (',' ~ states('input_text.mailbox_processed_notices') ~ ',') }}
             sequence:
+              # A variables block renders one key at a time, in order — declare
+              # before use.
+              - alias: "Pin this notice's identity, item count and uid"
+                variables:
+                  notice_epoch: "{{ (as_timestamp(trigger.event.data.get('date'), 0) | int(0)) | string }}"
+                  notice_uid: "{{ trigger.event.data.get('uid','') }}"
+                  notice_n: >-
+                    {{ (trigger.event.data.get('text','')) | regex_findall('(\d+)\s+new mail item') | first | int(1) }}
+
               - alias: "Add N items parsed from the email body"
                 action: input_number.set_value
                 target: { entity_id: input_number.mailbox_items_waiting }
                 data:
+                  value: "{{ (states('input_number.mailbox_items_waiting') | int(0)) + (notice_n | int(1)) }}"
+
+              # reject('eq','unknown') matters: a freshly created input_text
+              # reads "unknown", not "".
+              - alias: "Remember this notice — newest first, oldest falls off at 20"
+                action: input_text.set_value
+                target: { entity_id: input_text.mailbox_processed_notices }
+                data:
                   value: >-
-                    {{ (states('input_number.mailbox_items_waiting') | int(0))
-                       + ((trigger.event.data.text | default('')) | regex_findall('(\d+)\s+new mail item') | first | int(1)) }}
-              - alias: "Advance the UID high-water mark"
-                action: input_number.set_value
-                target: { entity_id: input_number.mailbox_last_uid }
-                data: { value: "{{ trigger.event.data.uid | int(0) }}" }
+                    {{ ([notice_epoch]
+                        + (states('input_text.mailbox_processed_notices').split(',')
+                           | reject('eq','') | reject('eq','unknown') | list))[:20] | join(',') }}
+
+              #########################################################
+              # OPTIONAL — file the notice out of your inbox.
+              #
+              # DISABLED BY DEFAULT. These two steps MOVE AN EMAIL in your
+              # account. The counter is complete and correct without them.
+              #
+              # Why you might want it: the email leaving the inbox becomes a
+              # visible "this was processed" marker you can see in your mail
+              # client, and the folder gives you a readable history.
+              #
+              # ⚠ WHY THE FETCH STEP EXISTS — DO NOT REMOVE IT.
+              #   imap.move and imap.seen both require the `uid`, which is the
+              #   very value documented above as unreliable. So we fetch that
+              #   uid back FIRST and check the subject before moving anything.
+              #   If it does not verify, the count still stands and NOTHING is
+              #   moved — which stops an unrelated email being filed.
+              #   This confirms we are touching *a* provider notice, not
+              #   necessarily *this* one; acceptable, since all such notices get
+              #   filed anyway. Do not "simplify" this into a bare move.
+              #
+              # NOT recommended: imap.seen as the processed marker. If you open
+              # the email yourself before HA processes it, it is marked read and
+              # then skipped — silently.
+              #
+              # To enable: set `enabled: true` on BOTH steps, put your IMAP
+              # config entry id in `entry:` (Settings > Devices & Services >
+              # IMAP > ... the id is in the URL), and set `target_folder:` to a
+              # folder that already exists on your server.
+              #########################################################
+              - alias: "OPTIONAL — fetch the message back to verify the uid"
+                enabled: false                                   # <-- CHANGE to true to use
+                continue_on_error: true      # a bad uid must never undo the count
+                action: imap.fetch
+                data:
+                  entry: "REPLACE_WITH_YOUR_IMAP_CONFIG_ENTRY_ID"  # <-- CHANGE
+                  uid: "{{ notice_uid }}"
+                response_variable: fetched
+
+              - alias: "OPTIONAL — only if it verified: file it out of the inbox"
+                enabled: false                                   # <-- CHANGE to true to use
+                if:
+                  - condition: template
+                    value_template: "{{ fetched is defined and 'New Mail' in (fetched.get('subject','')) }}"
+                then:
+                  - action: imap.move
+                    data:
+                      entry: "REPLACE_WITH_YOUR_IMAP_CONFIG_ENTRY_ID"  # <-- CHANGE
+                      uid: "{{ notice_uid }}"
+                      target_folder: "Mail/Processed"                  # <-- CHANGE, must already exist
+                      seen: false
+
           - alias: "Pickup or manual reset — clear the count and stamp the time"
             conditions:
               - condition: trigger
