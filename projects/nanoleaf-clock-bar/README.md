@@ -6,7 +6,7 @@
 
 A **Nanoleaf Lines** bar turned into a *linear clock*: seven light bars, mounted in a
 straight row, showing minutes-within-the-hour as they fill left to right. The seventh
-bar does double duty as an **outdoor-temperature gauge** and a **night heartbeat**.
+bar shows the **outdoor temperature**, and its other half is held dark for a future notifier.
 
 It also takes over the whole bar for a few special jobs — a **meeting countdown** that
 drains the bar to empty exactly at meeting time, a **partner bedtime wind-down**, and a
@@ -38,10 +38,10 @@ aren't expressible through the light domain.
 
 | Behavior | What you see |
 |---|---|
-| Normal | Minutes fill the bar; completed minutes solid, the active zone a lighter shade, future minutes dim |
+| Normal | Minutes fill the bar; completed minutes solid, future minutes dim. The active 5-minute zone is a lighter shade that **breathes** (fades to dark and back, 3s each way) while the room is occupied, and holds steady when it's empty |
 | Color arc | Warm reds/ambers overnight → sky blue-white at solar noon → violet at dusk |
 | Line 7 right | Outdoor temperature, as a stepped color scale |
-| Line 7 left | Slow 1s-up/1s-down heartbeat, overnight and only when the room is occupied |
+| Line 7 left | Dark — reserved for a future notifier |
 | Meeting countdown | Whole bar goes orange, then a marching zone, then drains to empty at meeting time — an ambient WFH warning that your next work-calendar event is imminent |
 | Post-meeting | Solid pink, one line per minute, for six minutes |
 | Partner wind-down | Signals the hour before a shift-derived bedtime |
@@ -113,7 +113,7 @@ Discover your own with the tools in [`tools/`](https://github.com/kwilson9/pwnkw
 
 | Constant | Placeholder shipped | What it's for |
 |---|---|---|
-| `OCCUPANCY_SENSOR` | `binary_sensor.room_motion` | Brightness (occupied vs empty); gates the heartbeat |
+| `OCCUPANCY_SENSOR` | `binary_sensor.room_motion` | Brightness (occupied vs empty); gates the breathing active zone |
 | `TEMP_SENSOR` | `sensor.outdoor_temperature` | Line 7b temperature gauge (°F) |
 | `SUN_ENTITY` | `sun.sun` | Day/night brightness and the color arc (uses the `elevation` attribute) |
 | `WORKDAY_SENSOR` | `binary_sensor.workday_sensor` | Gates the meeting countdown |
@@ -202,25 +202,33 @@ ships with Amsterdam sample values. Set them, and note **`elevation` is in metre
 both AppDaemon and Home Assistant regardless of your unit system (HA takes a bare
 integer and hands it to `astral`, which documents metres). 250 ft is `76`, not `250`.
 
-### Gotcha 2: Nanoleaf silently drops writes while a loop is running
+### Gotcha 2: multi-frame panels need `animType: "custom"` — `static` rejects them
 
-**The device ignores a new effect write while an effect loop is already playing.** Both
-`loop → loop` and `loop → static` transitions get dropped: **the HTTP PUT returns
-success** and the bar simply freezes on the previous frame.
+**Any panel with more than one frame makes a `"static"` write fail with HTTP 400, and the
+whole write is thrown away** — every other panel in it too. Send the same `animData` as
+`"animType": "custom"` and it is accepted and plays. The app now picks `custom` whenever
+a frame contains a loop (the breathing zone) and `static` otherwise.
 
-This is brutal to debug, because every layer reports success.
+Found the hard way (2026-09): v1.0 sent its night heartbeat — a 2-frame fade — as
+`static`, so **every redraw at night with the room occupied was rejected** and the bar
+sat on whatever it last showed. Nothing in Home Assistant shows it; only the app's
+`Nanoleaf error: 400` warnings do. **Log the HTTP status of every push.**
 
-**Rules that follow:**
+Isolated by hand against firmware 12.4.1, same payload each time:
 
-- **Don't build sequenced or transitioning animations on device-native loops.** The
-  first meeting countdown used a per-minute looping blink and froze on hardware — it
-  looked like 15 minutes of solid orange.
-- **Do build sequences from static writes only** (`loop: false`), spaced ~0.7s apart,
-  and log the HTTP status of each push so you can see them land.
-  `tools/nanoleaf_countdown_test.py` is a standalone harness demonstrating exactly this.
-- **One deliberate exception:** the 7a heartbeat *is* a native 2-frame loop. That's safe
-  precisely because it is pushed once and never has to transition to another loop — and
-  it costs ~zero API traffic, since the device runs the fade itself.
+| `animType` | multi-frame panel | `loop` | result |
+|---|---|---|---|
+| static | yes | true / false | **400** |
+| static | no | true / false | 204 |
+| custom | yes | true / false | 204 |
+
+**What this means for the older "loops freeze the bar" rule.** v1.0's notes said the device
+silently ignores writes while a loop is running (`loop → loop`, `loop → static`). With
+`custom` writes, **a loop replaced by another loop updated the bar correctly** (checked by
+eye, and the app's own 5-minute redraws log no errors). The old freeze may have been this
+400 all along — that is a hypothesis; it was not re-tested with `static` loops. The meeting
+countdown still uses static writes only (`loop: false`), spaced ~0.7s apart —
+`tools/nanoleaf_countdown_test.py` demonstrates that pattern.
 
 ---
 
@@ -256,7 +264,7 @@ This is **v1.0** — honest about what isn't proven:
 
 - Hour-of-day indicator (Line 7's original reserved purpose)
 - A dashboard to tune brightness live instead of editing constants
-- A general notification effect, reusing the static-writes pattern from Gotcha 2
+- A general notification effect on Line 7a (now held dark for it)
 
 ## Credits & Attribution
 
