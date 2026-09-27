@@ -63,6 +63,10 @@ DAY_EMPTY   = 0.45   # daytime, empty
 NIGHT_OCC   = 0.35   # after sunset, someone in the room
 NIGHT_EMPTY = 0.08   # after sunset, empty
 
+# Occupied (any hour): the active 5-min zone breathes -- fades to DARK and back
+# as a 2-frame device loop (sent as animType "custom"). transTime is 100 ms units.
+BREATHE_TRANS = 30   # 3.0 s down to dark, 3.0 s back up
+
 # ─── VERIFIED physical layout (guided walk) ──────────────────────────────
 # 7 physical Lines, left -> right. Each Line = 2 lit units: a (left) + b (right).
 #   Lines 1..6 = the clock, :00 at Line 1 (leftmost) ... :50 at Line 6
@@ -80,7 +84,7 @@ ARMS = [
 ALL_PANELS = [z for arm in ARMS for z in [arm["inner"], arm["outer"]]]
 
 # Line 7 (far right) — split into two special-use zones:
-HEARTBEAT_PANEL = 23507   # 7a: 1s fade up / 1s fade down pulse (night + occupied only)
+HEARTBEAT_PANEL = 23507   # 7a: held DARK -- reserved for a future notifier (was a night heartbeat)
 TEMP_PANEL      = 51986   # 7b: outdoor temp gauge
 RESERVED_BAR    = [HEARTBEAT_PANEL, TEMP_PANEL]  # both Line-7 zones (used for off/pride)
 
@@ -344,11 +348,11 @@ class NanoleafClock(hass.Hass):
 
         Zone states:
         - Completed minutes: solid clock color.
-        - Active (counting) zone: a LIGHTER SHADE of the solid color (static, no
-          animation) to show the current 5-min period building. Unoccupied =
-          dimmer half shade.
+        - Active (counting) zone: a LIGHTER SHADE of the solid color. Occupied =
+          it BREATHES (fades to dark and back, BREATHE_TRANS each way, device
+          loop). Unoccupied = dimmer half shade, steady.
         - Future minutes: dim.
-        Line 7 is special: 7a heartbeat (night+occupied), 7b temp gauge.
+        Line 7: 7a held dark, 7b temp gauge.
         """
         solid_rgb = self.get_color(hour, sun_elevation)
         off_rgb   = self.dim_rgb(solid_rgb, 0.04)
@@ -364,9 +368,13 @@ class NanoleafClock(hass.Hass):
             return f"{pid} 1 {r} {g} {b} 0 1"
 
         def active_frame(pid):
-            # Currently-counting zone: lighter shade if occupied, dim half if not.
-            rgb = light_rgb if self.occupied else half_rgb
-            return static_frame(pid, rgb, self.occupied)
+            # Currently-counting zone. Occupied = lighter shade breathing to dark
+            # (2-frame loop). Unoccupied = dim half shade, steady.
+            if not self.occupied:
+                return static_frame(pid, half_rgb, False)
+            bright = self.brightness_factor(True)
+            r, g, b = [max(0, min(255, int(c * bright))) for c in light_rgb]
+            return f"{pid} 2 {r} {g} {b} 0 {BREATHE_TRANS} 0 0 0 0 {BREATHE_TRANS}"
 
         parts = []
 
@@ -389,12 +397,13 @@ class NanoleafClock(hass.Hass):
                 parts.append(static_frame(arm["inner"], off_rgb, self.occupied))
                 parts.append(static_frame(arm["outer"], off_rgb, self.occupied))
 
-        # Line 7: heartbeat (7a) + temp (7b). Heartbeat needs a looping animation.
-        line7_parts, line7_loops = self.line7_parts(solid_rgb, hour, special=False)
+        # Line 7: 7a dark + 7b temp.
+        line7_parts, _ = self.line7_parts(solid_rgb, hour, special=False)
         parts += line7_parts
 
         anim_data = f"{len(parts)} " + " ".join(parts)
-        self.send_effect_raw(anim_data, loop=line7_loops)
+        # The breathing active zone is the only loop in a normal frame.
+        self.send_effect_raw(anim_data, loop=self.occupied)
 
     def render_meeting_countdown(self, now):
         """15-minute pre-meeting countdown over the WHOLE 14-zone bar.
@@ -637,25 +646,11 @@ class NanoleafClock(hass.Hass):
         r, g, b = [max(0, min(255, int(c * bright))) for c in rgb]
         return f"{TEMP_PANEL} 1 {r} {g} {b} 0 1"
 
-    def heartbeat_active(self, hour):
-        """7a heartbeat runs ONLY 11PM–5:59AM AND when occupied."""
-        return self.occupied and (hour >= 23 or hour < 6)
-
     def heartbeat_7a_part(self, clock_rgb, hour, special=False):
-        """Frame string for 7a heartbeat: smooth 1s fade up / 1s fade down,
-        native 2-frame loop (device handles it, ~zero API).
-        Color = contrast of clock color; WHITE in calendar special modes.
-        Returns (frame_string, loops_bool). If not active → solid off, no loop."""
-        if not self.heartbeat_active(hour):
-            return f"{HEARTBEAT_PANEL} 1 0 0 0 0 1", False
-
-        rgb = (255, 255, 255) if special else self.contrast_rgb(clock_rgb)
-        bright = self.brightness_factor(self.occupied)
-        r, g, b = [max(0, min(255, int(c * bright))) for c in rgb]
-        # 2 frames: off (1.0s transition) -> on (1.0s transition), loops => fade up/down.
-        # transTime 10 = 1.0s.
-        frame = f"{HEARTBEAT_PANEL} 2 0 0 0 0 10 {r} {g} {b} 0 10"
-        return frame, True
+        """Frame string for 7a. Held DARK -- reserved for a future notifier.
+        (The night heartbeat that lived here moved to the active zone as the
+        breathing effect in render_normal.) Returns (frame_string, loops_bool)."""
+        return f"{HEARTBEAT_PANEL} 1 0 0 0 0 1", False
 
     def line7_parts(self, clock_rgb, hour, special=False):
         """Build both Line-7 zones: 7a heartbeat + 7b temp.
@@ -680,7 +675,9 @@ class NanoleafClock(hass.Hass):
         payload = {
             "write": {
                 "command":  "display",
-                "animType": "static",
+                # Multi-frame panels are REJECTED (HTTP 400) under "static"; they
+                # need "custom". loop is True exactly when a frame has one.
+                "animType": "custom" if loop else "static",
                 "animData": anim_data,
                 "loop":     loop,
                 "palette":  [],
@@ -727,7 +724,9 @@ class NanoleafClock(hass.Hass):
         payload = {
             "write": {
                 "command":  "display",
-                "animType": "static",
+                # Multi-frame panels are REJECTED (HTTP 400) under "static"; they
+                # need "custom". loop is True exactly when a frame has one.
+                "animType": "custom" if loop else "static",
                 "animData": anim_data,
                 "loop":     loop,
                 "palette":  [],
