@@ -29,6 +29,15 @@ A Nanoleaf Lines bar as a linear clock — minutes fill left to right, with an
 outdoor-temperature gauge, an overnight heartbeat, and a meeting countdown that drains
 the bar to empty exactly at meeting time. Drives the device over its local REST API.
 
+### [Podcast Solution](podcast-solution/)
+
+<p class="manifest">Docker · python · Plex · Sonos</p>
+<p class="source"><a href="https://github.com/kwilson9/pwnkw_ha/tree/main/projects/podcast-solution">Source on GitHub</a></p>
+
+Podcasts on Sonos without a podcast app. A small container turns RSS feeds into Plex
+albums kept current to the latest episode; favorite the album in Sonos once. Learns each
+show's schedule, tidies titles, tracks Plex plays, and has a web page for managing feeds.
+
 ## Starting a new one
 
 Copy [`_template/`](https://github.com/kwilson9/pwnkw_ha/tree/main/projects/_template)

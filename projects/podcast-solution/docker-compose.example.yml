@@ -1,0 +1,33 @@
+# Podcast Solution — example compose file.
+# Copy to docker-compose.yml, change the four marked lines, then: docker compose up -d --build
+services:
+  podcast-solution:
+    build: .
+    image: podcast-solution:1
+    container_name: podcast-solution
+    # CHANGE 1: the user and group that should own the episode files (on most Linux NAS
+    # boxes, the account that owns your music share). `id <user>` shows the numbers.
+    user: "1000:1000"
+    init: true             # tiny init as PID 1, so stop signals reach the app
+    stop_grace_period: 15s
+    environment:
+      TZ: Etc/UTC          # CHANGE 2: your time zone, e.g. America/New_York
+      # CHANGE 3: the same folder as in `volumes` below, spelled the way the NAS spells it.
+      # Plex rescans are asked for by this path.
+      MEDIA_HOST_PATH: /srv/music/Podcasts
+      # Optional: your Plex server. Can also be set on the Config page.
+      # PLEX_URL: http://192.168.1.10:32400
+    volumes:
+      - ./data:/data                       # feeds, state, play history, settings (incl. your Plex token)
+      - /srv/music/Podcasts:/media         # CHANGE 4: a folder inside a Plex music library
+    ports:
+      - "8095:8095"                        # the web page; keep it on your home network
+    mem_limit: 128m
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
